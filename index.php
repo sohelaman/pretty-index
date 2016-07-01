@@ -119,6 +119,7 @@ function getPublicAddress() {
         border: 1px solid #000;
         padding: 4px;
         margin: 8px 4px;
+        overflow: auto;
       }
       div.footer {
         padding: 4px;
