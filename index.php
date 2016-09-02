@@ -135,6 +135,11 @@ function getPublicAddress() {
         padding: 4px;
         margin: 8px 4px;
       }
+      div.eval_output{
+        max-height: 250px;
+        overflow-wrap: break-word;
+        overflow: auto;
+      }
       div.footer {
         padding: 4px;
         margin: 4px 4px;
@@ -164,9 +169,9 @@ function getPublicAddress() {
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
       window.onload = function() {
+        document.getElementById('eval_output').style.display='none';
         if (window.jQuery) {
           // jQuery is loaded
-          $('#eval_output').hide();
           $(document).ready(function() {
             var form = $('#eval_form'); // contact form
             var submit = $('#submit');  // submit button
@@ -200,6 +205,9 @@ function getPublicAddress() {
           // jQuery is not loaded
           <?php
             if(isset($_POST['eval_code'])){
+            ?>
+            document.getElementById('eval_output').style.display='block';
+            <?php
               $name = trim($_POST['eval_code']);
               ob_start();
               eval($name);
