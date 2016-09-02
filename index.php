@@ -192,7 +192,6 @@ function getPublicAddress() {
                 success: function(data) {
                   eval_text.show(); // show the eval box
                   eval_text.html(data).fadeIn(); // fade in response data
-                  form.trigger('reset'); // reset form
                   submit.html('Run'); // reset submit button text
                 },
                 error: function(e) {
