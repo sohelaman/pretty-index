@@ -30,13 +30,28 @@ $php_tz = date_default_timezone_get();
 
 
 // php eval
-if( isset($_POST['submit']) and $_POST['submit'] == 'Run' ) {
-  if( isset($_POST['code']) ) {
-    $code = trim($_POST['code']);
+// if( isset($_POST['submit']) and $_POST['submit'] == 'Run' ) {
+//   if( isset($_POST['code']) ) {
+//     $code = trim($_POST['code']);
+//     ob_start();
+//     eval($code);
+//     $eval_output = ob_get_contents();
+//     ob_end_clean();
+//   }
+// }
+# php eval alternative
+# request sent using HTTP_X_REQUESTED_WITH
+if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
+  if(isset($_POST['eval_code'])){
+    $name = trim($_POST['eval_code']);
     ob_start();
-    eval($code);
+    eval($name);
     $eval_output = ob_get_contents();
     ob_end_clean();
+    echo $eval_output;
+    return;
+  }else{
+    return;
   }
 }
 
@@ -136,7 +151,7 @@ function getPublicAddress() {
       }
       textarea.code {
         width:100%;
-        height:100%; 
+        height:100%;
         max-width: 100%;
         box-sizing: border-box;
         -moz-box-sizing: border-box;
@@ -146,17 +161,66 @@ function getPublicAddress() {
     <script type="text/javascript">
       // console.log('Hello, world!');
     </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript">
+      window.onload = function() {
+        if (window.jQuery) {
+          // jQuery is loaded
+          $('#eval_output').hide();
+          $(document).ready(function() {
+            var form = $('#eval_form'); // contact form
+            var submit = $('#submit');  // submit button
+            var eval_text = $('#eval_output'); // eval_output div for show alert message
+            // form submit event
+            form.on('submit', function(e) {
+              e.preventDefault(); // prevent default form submit
+              // sending ajax request through jQuery
+              $.ajax({
+                url: '', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'html', // request type html/json/xml
+                data: form.serialize(), // serialize form data
+                beforeSend: function() {
+                  eval_text.fadeOut();
+                  submit.html('Processing...'); // change submit button text
+                },
+                success: function(data) {
+                  eval_text.show(); // show the eval box
+                  eval_text.html(data).fadeIn(); // fade in response data
+                  form.trigger('reset'); // reset form
+                  submit.html('Run'); // reset submit button text
+                },
+                error: function(e) {
+                  console.log(e); //show error on console
+                }
+              });
+            });
+          });
+        } else {
+          // jQuery is not loaded
+          <?php
+            if(isset($_POST['eval_code'])){
+              $name = trim($_POST['eval_code']);
+              ob_start();
+              eval($name);
+              $eval_output = ob_get_contents();
+              ob_end_clean();
+            }
+          ?>
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="container">
       <div class="block center">
         <a href="<?php echo $localhost_url; ?>"><h1>localhost | <?php echo $host_ip; ?></h1></a>
       </div>
-      
+
       <div class="block center">
         <h3><?php echo $date_time; ?></h3>
       </div>
-      
+
       <div class="block">
         <table class="mid">
           <td>
@@ -178,7 +242,7 @@ function getPublicAddress() {
           </td>
         </table>
       </div>
-      
+
       <div class="block">
         <table class="mid">
           <td>
@@ -196,7 +260,7 @@ function getPublicAddress() {
           </td>
         </table>
       </div>
-      
+
       <div class="block">
         <table class="mid">
           <?php
@@ -205,7 +269,7 @@ function getPublicAddress() {
           }
           ?>
         </table>
-      </div> 
+      </div>
 
       <div class="block">
         <table class="wide">
@@ -225,17 +289,13 @@ function getPublicAddress() {
           </td>
         </table>
       </div>
-      
-      <?php if( isset( $eval_output ) and ! empty($eval_output) ) { ?>
-      <div class="block">
+      <div id="eval_output" class="block eval_output">
         <p><?php echo $eval_output; ?></p>
       </div>
-      <?php } ?>
-      
       <div class="block">
-        <form method="post">
-          <textarea class="code" name="code" rows="4" placeholder="PHP code here..."></textarea>
-          <br/><input type="submit" name="submit" value="Run">
+        <form id="eval_form" method="post" action="">
+          <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."></textarea>
+          <br/><button name="submit" type="submit" id="submit">Run</button>
         </form>
       </div>
     </div>
