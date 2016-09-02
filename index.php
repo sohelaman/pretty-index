@@ -101,22 +101,54 @@ function getPublicAddress() {
 
 ?>
 
-
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8">
     <title>Localhost</title>
     <style type="text/css">
+      .col-1 {width: 8.33%;}
+      .col-2 {width: 16.66%;}
+      .col-3 {width: 25%;}
+      .col-4 {width: 33.33%;}
+      .col-5 {width: 41.66%;}
+      .col-6 {width: 50%;}
+      .col-7 {width: 58.33%;}
+      .col-8 {width: 66.66%;}
+      .col-9 {width: 75%;}
+      .col-10 {width: 83.33%;}
+      .col-11 {width: 91.66%;}
+      .col-12 {width: 100%;}
+      [class*="col-"] {float: left;}
+      @media only screen and (max-width: 768px) {
+        [class*="col-"] {
+          width: 100%;
+        }
+      }
+      .clearfix:after {
+        visibility: hidden;
+        display: block;
+        font-size: 0;
+        content: " ";
+        clear: both;
+        height: 0;
+      }
+      * html .clearfix { zoom: 1; }
+      *:first-child+html .clearfix { zoom: 1; }
       a {
-        text-decoration: none;
+        text-decoration: none !important;
+        background: none !important;
       }
       a:hover {
         color: red;
       }
+      p{
+        margin: 0;
+        padding: 2px 0;
+      }
       .container {
         font-family: monospace;
-        width: 50%;
+        max-width: 768px;
         background: #DDD;
         padding: 10px;
         margin: auto;
@@ -140,17 +172,7 @@ function getPublicAddress() {
         overflow-wrap: break-word;
         overflow: auto;
       }
-      div.footer {
-        padding: 4px;
-        margin: 4px 4px;
-      }
-      table.mid {
-        margin: auto;
-      }
-      table.wide {
-        width: 100%;
-      }
-      td.menu {
+      .menu {
         padding: 0 4px;
         font-size: 14px;
       }
@@ -161,6 +183,17 @@ function getPublicAddress() {
         box-sizing: border-box;
         -moz-box-sizing: border-box;
         -webkit-box-sizing: border-box;
+      }
+      .stretch{
+        display: inline-block;
+        margin: 0 1vw;
+      }
+      .host_info{
+        text-align: center;
+      }
+      .block.search{
+        padding-top: 7px;
+        padding-bottom: 7px;
       }
       ::-webkit-scrollbar {
         width: 6px;
@@ -247,73 +280,67 @@ function getPublicAddress() {
         <h3><?php echo $date_time; ?></h3>
       </div>
 
-      <div class="block">
-        <table class="mid">
-          <td>
-            <table>
-              <tr><td>Public IP</td><td>:</td><td><b><?php echo $public_addr; ?></b></td></tr>
-              <tr><td>LAN IP</td><td>:</td><td><b><?php echo $local_addr; ?></b></td></tr>
-              <tr><td>Host IP</td><td>:</td><td><b><?php echo $host_ip; ?></b></td></tr>
-              <tr><td>Remote IP</td><td>:</td><td><b><?php echo $remote_ip; ?></b></td></tr>
-            </table>
-          </td>
-          <td>&nbsp;&nbsp;</td>
-          <td>
-            <table>
-              <tr><td>Document Root</td><td>:</td><td><b><?php echo $doc_root; ?></b></td></tr>
-              <tr><td>PHP Version</td><td>:</td><td><b><?php echo $php_version; ?></b></td></tr>
-              <tr><td>PHP Loaded INI</td><td>:</td><td><b><?php echo $php_ini; ?></b></td></tr>
-              <tr><td>PHP Timezone</td><td>:</td><td><b><?php echo $php_tz; ?></b></td></tr>
-            </table>
-          </td>
-        </table>
+      <div class="block host_info clearfix">
+        <div class="col-12">
+          <div class="col-6 first">
+            <p>Public IP : <b><?php echo $public_addr; ?></b></p>
+            <p>LAN IP : <b><?php echo $local_addr; ?></b></p>
+            <p>Host IP : <b><?php echo $host_ip; ?></b></p>
+            <p>Remote IP : <b><?php echo $remote_ip; ?></b></p>
+          </div>
+          <div class="col-6 last">
+            <p>Document Root : <b><?php echo $doc_root; ?></b></p>
+            <p>PHP Version : <b><?php echo $php_version; ?></b></p>
+            <p>PHP Loaded INI : <b><?php echo $php_ini; ?></b></p>
+            <p>PHP Timezone : <b><?php echo $php_tz; ?></b></p>
+          </div>
+        </div>
       </div>
 
-      <div class="block">
-        <table class="mid">
-          <td>
+      <div class="block search clearfix center">
+        <div class="col-12 clearfix">
+          <div class="col-6">
             <form method="get" action="http://www.google.com/search">
               <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Google search"/>
               <input type="submit" value="Google" />
             </form>
-          </td>
-          <td></td>
-          <td>
+          </div>
+          <div class="col-6">
             <form method="get" action="http://www.bing.com/search">
               <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Bing search"/>
               <input type="submit" value="Bing" />
             </form>
-          </td>
-        </table>
+          </div>
+        </div>
       </div>
 
-      <div class="block">
-        <table class="mid">
+      <div class="block clearfix center">
+        <div class="col-12 ">
           <?php
           foreach ($bookmarks as $key => $value) {
-            echo '<td class="menu"><b><a href="' . $value . '">' . $key . '</a></b></td>';
+            echo '<div class="menu stretch"><b><a href="' . $value . '">' . $key . '</a></b></div>';
           }
           ?>
-        </table>
+        </div>
       </div>
 
-      <div class="block">
-        <table class="wide">
-          <td valign="top" class="left">
+      <div class="block directory_index clearfix">
+        <div class="col-12">
+          <div class="col-6 left">
             <?php
             foreach( $directories as $folder ) {
               echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
             }
             ?>
-          </td>
-          <td valign="top" class="right">
+          </div>
+          <div class="col-6 right">
             <?php
             foreach( $files as $file ) {
               echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
             }
             ?>
-          </td>
-        </table>
+          </div>
+        </div>
       </div>
       <div id="eval_output" class="block eval_output">
         <p><?php echo $eval_output; ?></p>
@@ -324,6 +351,7 @@ function getPublicAddress() {
           <br/><button name="submit" type="submit" id="submit">Run</button>
         </form>
       </div>
+      <footer><div class="right"><i>Pretty Index</i></div></footer>
     </div>
   </body>
 </html>
