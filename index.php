@@ -166,6 +166,7 @@ function getPublicAddress() {
         border: 1px solid #000;
         padding: 4px;
         margin: 8px 4px;
+        overflow: auto;
       }
       div.eval_output{
         max-height: 250px;
