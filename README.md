@@ -1,8 +1,7 @@
-# pretty_index   
-Pretty Index   
-Original Author: Sohel Aman Khan   
-Repo: https://github.com/sohelamankhan/pretty_index   
-A simple index page for your localhost which combines all your necessary stuffs and more in one place.   
+# Pretty Index   
+
+## A simple index page for your localhost which combines all your necessary stuffs and more in one place.   
+
 Features:   
 - IP Addresses: Public IP, LAN IP, Host IP, Remote IP.   
 - Document Root   
@@ -14,3 +13,5 @@ Features:
 - Adminer Shortcut
 - Directory Listing
 - PHP Code Tester
+
+** Note: Only for development purpose. DO NOT put this in your production server. **
