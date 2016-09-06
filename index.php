@@ -270,6 +270,16 @@ function getPublicAddress() {
         }
       }
     </script>
+    <script type="text/javascript">
+      function clear_text() {
+        document.getElementById("eval_code").value='';
+      }
+      function reset_text() {
+        clear_text();
+        document.getElementById("eval_output").innerHTML='';
+        document.getElementById("eval_output").style.display='none';
+      }
+    </script>
   </head>
   <body>
     <div class="container">
@@ -350,6 +360,9 @@ function getPublicAddress() {
         <form id="eval_form" method="post" action="">
           <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."></textarea>
           <br/><button name="submit" type="submit" id="submit">Run</button>
+          <button name="clearText" type="button" id="clearText" onclick="clear_text()">Clear Text</button>
+          <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
+
         </form>
       </div>
       <footer><div class="right"><i>Pretty Index</i></div></footer>
