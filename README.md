@@ -1,17 +1,16 @@
 # Pretty Index   
 
-## A simple index page for your localhost which combines all your necessary stuffs and more in one place.   
+## A simple yet useful index page for developers
 
-Features:   
-- IP Addresses: Public IP, LAN IP, Host IP, Remote IP.   
-- Document Root   
-- Current PHP Version   
-- PHP INI location   
-- PHP Timezone   
-- Google and Bing Search
-- phpMyAdmin Shortcut
-- Adminer Shortcut
-- Directory Listing
-- PHP Code Tester
+### Features
+* Displays important server related information
+	- Displays public IP, LAN IP, host IP and remote IP inone place
+	- Displays document root
+	- Current PHP version
+	- PHP INI location
+	- PHP timezone
+* Google and Bing Search
+* Directory listing
+* Evaluate PHP code
 
-** Note: Only for development purpose. DO NOT put this in your production server. **
+**Note: Only for development purpose. DO NOT put this in your production server.**
