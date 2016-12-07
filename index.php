@@ -277,6 +277,7 @@ function getPublicAddress() {
       function reset_text() {
         clear_text();
         document.getElementById("eval_output").innerHTML='';
+        document.getElementById("submit").innerHTML='Run';
         document.getElementById("eval_output").style.display='none';
       }
     </script>
