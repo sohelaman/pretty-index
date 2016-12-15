@@ -229,6 +229,7 @@ function getPublicAddress() {
             var form = $('#eval_form'); // contact form
             var submit = $('#submit');  // submit button
             var eval_text = $('#eval_output'); // eval_output div for show alert message
+            var info_wrapper = $('#info_wrapper'); // information wrapper
             // form submit event
             form.on('submit', function(e) {
               e.preventDefault(); // prevent default form submit
@@ -246,6 +247,7 @@ function getPublicAddress() {
                   eval_text.show(); // show the eval box
                   eval_text.html(data).fadeIn(); // fade in response data
                   submit.html('Run'); // reset submit button text
+                  info_wrapper.hide(); // hide information fields
                 },
                 error: function(e) {
                   console.log(e); //show error on console
@@ -270,87 +272,101 @@ function getPublicAddress() {
         }
       }
     </script>
+    <script type="text/javascript">
+      function clear_text() {
+        document.getElementById("eval_code").value='';
+      }
+      function reset_text() {
+        clear_text();
+        document.getElementById("eval_output").innerHTML='';
+        document.getElementById("submit").innerHTML='Run';
+        document.getElementById("eval_output").style.display='none';
+        document.getElementById("info_wrapper").style.display='block';
+      }
+    </script>
   </head>
   <body>
     <div class="container">
       <div class="block center">
         <a href="<?php echo $localhost_url; ?>"><h1>localhost | <?php echo $host_ip; ?></h1></a>
       </div>
-
-      <div class="block center">
-        <h3><?php echo $date_time; ?></h3>
-      </div>
-
-      <div class="block host_info clearfix">
-        <div class="col-12">
-          <div class="col-6 first">
-            <p>Public IP : <b><?php echo $public_addr; ?></b></p>
-            <p>LAN IP : <b><?php echo $local_addr; ?></b></p>
-            <p>Host IP : <b><?php echo $host_ip; ?></b></p>
-            <p>Remote IP : <b><?php echo $remote_ip; ?></b></p>
-          </div>
-          <div class="col-6 last">
-            <p>Document Root : <b><?php echo $doc_root; ?></b></p>
-            <p>PHP Version : <b><?php echo $php_version; ?></b></p>
-            <p>PHP Loaded INI : <b><?php echo $php_ini; ?></b></p>
-            <p>PHP Timezone : <b><?php echo $php_tz; ?></b></p>
+      <div id="info_wrapper">
+        <div class="block center">
+          <h3><?php echo $date_time; ?></h3>
+        </div>
+        <div class="block host_info clearfix">
+          <div class="col-12">
+            <div class="col-6 first">
+              <p>Public IP : <b><?php echo $public_addr; ?></b></p>
+              <p>LAN IP : <b><?php echo $local_addr; ?></b></p>
+              <p>Host IP : <b><?php echo $host_ip; ?></b></p>
+              <p>Remote IP : <b><?php echo $remote_ip; ?></b></p>
+            </div>
+            <div class="col-6 last">
+              <p>Document Root : <b><?php echo $doc_root; ?></b></p>
+              <p>PHP Version : <b><?php echo $php_version; ?></b></p>
+              <p>PHP Loaded INI : <b><?php echo $php_ini; ?></b></p>
+              <p>PHP Timezone : <b><?php echo $php_tz; ?></b></p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="block search clearfix center">
-        <div class="col-12 clearfix">
-          <div class="col-6">
-            <form method="get" action="http://www.google.com/search">
-              <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Google search"/>
-              <input type="submit" value="Google" />
-            </form>
-          </div>
-          <div class="col-6">
-            <form method="get" action="http://www.bing.com/search">
-              <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Bing search"/>
-              <input type="submit" value="Bing" />
-            </form>
+        <div class="block search clearfix center">
+          <div class="col-12 clearfix">
+            <div class="col-6">
+              <form method="get" action="http://www.google.com/search">
+                <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Google search"/>
+                <input type="submit" value="Google" />
+              </form>
+            </div>
+            <div class="col-6">
+              <form method="get" action="http://www.bing.com/search">
+                <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Bing search"/>
+                <input type="submit" value="Bing" />
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="block clearfix center">
-        <div class="col-12 ">
-          <?php
-          foreach ($bookmarks as $key => $value) {
-            echo '<div class="menu stretch"><b><a href="' . $value . '">' . $key . '</a></b></div>';
-          }
-          ?>
-        </div>
-      </div>
-
-      <div class="block directory_index clearfix">
-        <div class="col-12">
-          <div class="col-6 left">
+        <div class="block clearfix center">
+          <div class="col-12 ">
             <?php
-            foreach( $directories as $folder ) {
-              echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
-            }
-            ?>
-          </div>
-          <div class="col-6 right">
-            <?php
-            foreach( $files as $file ) {
-              echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
+            foreach ($bookmarks as $key => $value) {
+              echo '<div class="menu stretch"><b><a href="' . $value . '">' . $key . '</a></b></div>';
             }
             ?>
           </div>
         </div>
-      </div>
-      <div id="eval_output" class="block eval_output">
-        <p><?php echo $eval_output; ?></p>
+
+        <div class="block directory_index clearfix">
+          <div class="col-12">
+            <div class="col-6 left">
+              <?php
+              foreach( $directories as $folder ) {
+                echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
+              }
+              ?>
+            </div>
+            <div class="col-6 right">
+              <?php
+              foreach( $files as $file ) {
+                echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
+              }
+              ?>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="block">
         <form id="eval_form" method="post" action="">
           <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."></textarea>
           <br/><button name="submit" type="submit" id="submit">Run</button>
+          <button name="clearText" type="button" id="clearText" onclick="clear_text()">Clear Text</button>
+          <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
         </form>
+      </div>
+      <div id="eval_output" class="block eval_output">
+        <p><?php echo $eval_output; ?></p>
       </div>
       <footer><div class="right"><i>Pretty Index</i></div></footer>
     </div>
