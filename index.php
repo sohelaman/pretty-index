@@ -196,6 +196,9 @@ function getPublicAddress() {
         padding-top: 7px;
         padding-bottom: 7px;
       }
+      .directory_index{
+        max-height: 20vh;
+      }
       ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
