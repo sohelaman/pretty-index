@@ -225,6 +225,7 @@ function getPublicAddress() {
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
       window.onload = function() {
+        jstime('datetime');
         document.getElementById('eval_output').style.display='none';
         if (window.jQuery) {
           // jQuery is loaded
@@ -276,6 +277,23 @@ function getPublicAddress() {
       }
     </script>
     <script type="text/javascript">
+      function jstime(elem) {
+        var dateObj = new Date();
+        var datePart = dateObj.toLocaleString("en", { weekday: "long"  })
+                          + ', ' + dateObj.toLocaleString("en", { month: "long" })
+                          + ' ' + dateObj.toLocaleString("en", { day: "numeric" })
+                          + ', ' + dateObj.toLocaleString("en", { year: "numeric"});
+        var h = dateObj.getHours();
+        var m = dateObj.getMinutes();
+        var s = dateObj.getSeconds();
+        m = (m < 10) ? "0" + m : m;
+        s = (s < 10) ? "0" + s : s;
+        var timePart = h + ":" + m + ":" + s;
+        document.getElementById(elem).innerHTML = timePart + ' - ' + datePart;
+        var timePart = setTimeout(function() {
+          jstime(elem);
+        }, 900);
+      }
       function clear_text() {
         document.getElementById("eval_code").value='';
       }
@@ -295,7 +313,7 @@ function getPublicAddress() {
       </div>
       <div id="info_wrapper">
         <div class="block center">
-          <h3><?php echo $date_time; ?></h3>
+          <h3 id="datetime"><?php echo $date_time; ?></h3>
         </div>
         <div class="block host_info clearfix">
           <div class="col-12">
@@ -369,9 +387,9 @@ function getPublicAddress() {
         </form>
       </div>
       <div id="eval_output" class="block eval_output">
-        <p><?php echo $eval_output; ?></p>
+        <p><?php if(isset($eval_output)) { echo $eval_output; } ?></p>
       </div>
-      <footer><div class="right"><i>Pretty Index</i></div></footer>
+      <footer><div class="right"><a href="https://github.com/sohelamankhan/pretty_index" target="_blank"><i>Pretty Index</i></a></div></footer>
     </div>
   </body>
 </html>
