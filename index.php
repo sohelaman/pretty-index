@@ -58,21 +58,27 @@ if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
 // functions
 
 function getLocalAddress() {
-  if(strtoupper(PHP_OS) == 'LINUX') {
-    return trim(explode(' ',explode(':',explode('inet addr',explode('eth0',trim(`ifconfig`))[1])[1])[1])[0]);
-  } else if(strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+  if(strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
     exec("ipconfig /all", $output);
     foreach($output as $line) {
       if(preg_match("/(.*)IPv4 Address(.*)/", $line)) {
-        $ip = $line;
-        $ip = str_replace("IPv4 Address. . . . . . . . . . . :","",$ip);
-        $ip = str_replace("(Preferred)","",$ip);
+        if( preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match) ) {
+          if( filter_var($match[0], FILTER_VALIDATE_IP) ) { return trim($match[0]); }
+        }
       }
-    }
-    return trim($ip);
+    } // endforeach
+  } else if(strtoupper(PHP_OS) == 'LINUX') {
+    $methods = array();
+    $methods[] = function() { return `ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`; };
+    $methods[] = function() { return `ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`; };
+    $methods[] = function() { return `ip route get 1 | awk '{print $NF;exit}'`; };
+    foreach( $methods as $method ) {
+      $ip = trim($method());
+      if( filter_var($ip, FILTER_VALIDATE_IP) ) { return $ip; }
+    } // endforeach
   }
-  return null;
-}
+  return "N/A";
+} // end of getLocalAddress()
 
 
 function getDirContents( $dir = __DIR__ ) {
