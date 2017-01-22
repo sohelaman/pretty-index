@@ -321,6 +321,18 @@ function getPublicAddress() {
         var wrapper = document.getElementById('directory_index');
         wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
       }
+      function webSearch(engine) {
+        switch(engine) {
+          case 'bing':
+              document.search_form.action = "//www.bing.com/search";
+              break;
+          case 'duckduckgo':
+              document.search_form.action = "//duckduckgo.com/";
+              break;
+          default:
+              document.search_form.action = "//www.google.com/search";
+        }
+      }
     </script>
   </head>
   <body>
@@ -351,18 +363,12 @@ function getPublicAddress() {
 
         <div class="block search clearfix center">
           <div class="col-12 clearfix">
-            <div class="col-6">
-              <form method="get" action="http://www.google.com/search">
-                <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Google search"/>
-                <input type="submit" value="Google" />
-              </form>
-            </div>
-            <div class="col-6">
-              <form method="get" action="http://www.bing.com/search">
-                <input type="text" name="q" size="30" maxlength="255" value="" placeholder="Bing search"/>
-                <input type="submit" value="Bing" />
-              </form>
-            </div>
+            <form name="search_form" method="get" action="//www.google.com/search">
+              <input type="text" name="q" size="50" maxlength="255" value="" placeholder="Search in the web"/>
+              <input type="submit" value="Google" onclick="webSearch('google');" />
+              <input type="submit" value="Bing" onclick="webSearch('bing');" />
+              <input type="submit" value="DuckDuckGo" onclick="webSearch('duckduckgo');" />
+            </form>
           </div>
         </div>
 
