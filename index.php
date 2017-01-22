@@ -29,18 +29,6 @@ $php_ini = php_ini_loaded_file();
 $php_tz = date_default_timezone_get();
 
 
-// php eval
-// if( isset($_POST['submit']) and $_POST['submit'] == 'Run' ) {
-//   if( isset($_POST['code']) ) {
-//     $code = trim($_POST['code']);
-//     ob_start();
-//     eval($code);
-//     $eval_output = ob_get_contents();
-//     ob_end_clean();
-//   }
-// }
-# php eval alternative
-# request sent using HTTP_X_REQUESTED_WITH
 if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
   if(isset($_POST['eval_code'])){
     $name = trim($_POST['eval_code']);
@@ -53,6 +41,11 @@ if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
   }else{
     return;
   }
+}
+
+if ( isset($_REQUEST['phpinfo']) and $_REQUEST['phpinfo'] == 1 ) {
+  phpinfo();
+  return;
 }
 
 // functions
@@ -203,7 +196,10 @@ function getPublicAddress() {
         padding-bottom: 7px;
       }
       .directory_index{
-        max-height: 20vh;
+        /*max-height: 20vh;*/
+      }
+      .current-dir:hover{
+        background-color: lightblue;
       }
       ::-webkit-scrollbar {
         width: 6px;
@@ -292,13 +288,24 @@ function getPublicAddress() {
         var h = dateObj.getHours();
         var m = dateObj.getMinutes();
         var s = dateObj.getSeconds();
-        m = (m < 10) ? "0" + m : m;
-        s = (s < 10) ? "0" + s : s;
+        h = (h < 10) ? "0" + h : h; m = (m < 10) ? "0" + m : m; s = (s < 10) ? "0" + s : s;
         var timePart = h + ":" + m + ":" + s;
         document.getElementById(elem).innerHTML = timePart + ' - ' + datePart;
         var timePart = setTimeout(function() {
           jstime(elem);
         }, 900);
+      }
+      function phpi() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var x = window.open('', '', 'location=no, toolbar=0');
+            x.document.body.innerHTML = `${this.responseText}`;
+          }
+        };
+        xhttp.open("POST", window.location.href, true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("phpinfo=1");
       }
       function clear_text() {
         document.getElementById("eval_code").value='';
@@ -310,12 +317,16 @@ function getPublicAddress() {
         document.getElementById("eval_output").style.display='none';
         document.getElementById("info_wrapper").style.display='block';
       }
+      function collapseDirContents() {
+        var wrapper = document.getElementById('directory_index');
+        wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+      }
     </script>
   </head>
   <body>
     <div class="container">
       <div class="block center">
-        <a href="<?php echo $localhost_url; ?>"><h1>localhost | <?php echo $host_ip; ?></h1></a>
+        <a href="javascript:location.reload();"><h1>localhost | <?php echo $host_ip; ?></h1></a>
       </div>
       <div id="info_wrapper">
         <div class="block center">
@@ -331,7 +342,7 @@ function getPublicAddress() {
             </div>
             <div class="col-6 last">
               <p>Document Root : <b><?php echo $doc_root; ?></b></p>
-              <p>PHP Version : <b><?php echo $php_version; ?></b></p>
+              <p>PHP Version : <b><?php echo $php_version; ?> (<a href="javascript:phpi();">phpinfo</a>)</b></p>
               <p>PHP Loaded INI : <b><?php echo $php_ini; ?></b></p>
               <p>PHP Timezone : <b><?php echo $php_tz; ?></b></p>
             </div>
@@ -365,9 +376,13 @@ function getPublicAddress() {
           </div>
         </div>
 
-        <div class="block directory_index clearfix">
-          <div class="col-12">
-            <div class="col-6 left">
+        <a onclick="collapseDirContents();" href="javascript:;">
+          <div class="block clearfix center current-dir">Current directory: <?php echo __DIR__; ?></div>
+        </a>
+        <div id="directory_index" class="block directory_index clearfix" style="display: none;">
+          <div id="dir-contents" class="col-12">
+            <div class="col-6 left" >
+              <p>Directories</p><hr>
               <?php
               foreach( $directories as $folder ) {
                 echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
@@ -375,6 +390,7 @@ function getPublicAddress() {
               ?>
             </div>
             <div class="col-6 right">
+              <p>Files</p><hr>
               <?php
               foreach( $files as $file ) {
                 echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
