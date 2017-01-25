@@ -50,7 +50,7 @@ if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
     echo $eval_output;
     return;
   }else if($isBookmark){
-    bookmark_insert();
+    set_bookmark();
     return;
   }else{
     return;
@@ -114,12 +114,14 @@ function getPublicAddress() {
   return $obj->ip;
 }
 
-function bookmark_insert(){
+function set_bookmark(){
+  if(!empty($_POST['bookmark_name']) && !empty($_POST['bookmark_url'])){
     $insertData=array($_POST['bookmark_name'], $_POST['bookmark_url']);
-   try{
-     $GLOBALS["file_db"]->exec("INSERT INTO bookmarks (id, title, url) VALUES (null, '$insertData[0]', '$insertData[1]')");
-  }catch(PDOException $e) {
-    // echo $e->getMessage();
+    try{
+      $GLOBALS["file_db"]->exec("INSERT INTO bookmarks (id, title, url) VALUES (null, '$insertData[0]', '$insertData[1]')");
+    }catch(PDOException $e) {
+      // echo $e->getMessage();
+    }
   }
 }
 
@@ -129,7 +131,7 @@ function get_bookmarks(){
     $result = $GLOBALS["file_db"]->query("SELECT * FROM bookmarks;");
     echo '<ul id="bookmarks-list">';
     foreach($result as $key=>$row) {
-      echo "<li class='bookmarks'><a href='".$row['url']."' data-bookmark-id=".$row['id'].">".$row['title']."</a></li>";
+      echo "<li class='bookmarks'><a href='".$row['url']."' data-bookmark-id=".$row['id']." target='_blank'>".$row['title']."</a></li>";
     }
     echo '</ul>';
   }catch(PDOException $e) {
@@ -172,6 +174,9 @@ function get_bookmarks(){
       }
       * html .clearfix { zoom: 1; }
       *:first-child+html .clearfix { zoom: 1; }
+      body{
+        background-color: #666666;
+      }
       a {
         text-decoration: none !important;
         background: none !important;
@@ -298,7 +303,7 @@ function get_bookmarks(){
     <script type="text/javascript">
       // console.log('Hello, world!');
     </script>
-    <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script> -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
       window.onload = function() {
         function bookmark_delete(){
@@ -322,7 +327,7 @@ function get_bookmarks(){
         bookmark_delete();
         <?php
         if($isBookmark){
-          bookmark_insert();
+          set_bookmark();
         }
         ?>
         jstime('datetime');
@@ -497,11 +502,11 @@ function get_bookmarks(){
         <div class="block" id="bookmark_wrapper">
           <div class="bm-list-wrapper">
             <div class="left">
-              <a href="#" onclick="show_bm_block()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31 12h-11v-11c0-0.552-0.448-1-1-1h-6c-0.552 0-1 0.448-1 1v11h-11c-0.552 0-1 0.448-1 1v6c0 0.552 0.448 1 1 1h11v11c0 0.552 0.448 1 1 1h6c0.552 0 1-0.448 1-1v-11h11c0.552 0 1-0.448 1-1v-6c0-0.552-0.448-1-1-1z"></path></svg></a>
+              <a href="javascript:;" onclick="show_bm_block()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31 12h-11v-11c0-0.552-0.448-1-1-1h-6c-0.552 0-1 0.448-1 1v11h-11c-0.552 0-1 0.448-1 1v6c0 0.552 0.448 1 1 1h11v11c0 0.552 0.448 1 1 1h6c0.552 0 1-0.448 1-1v-11h11c0.552 0 1-0.448 1-1v-6c0-0.552-0.448-1-1-1z"></path></svg></a>
             </div>
             <div id="bm-list" style="display: inline-block;"><?php get_bookmarks(); ?></div>
             <div class="right">
-              <a href="#" onclick="remove_btn()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31.708 25.708c-0-0-0-0-0-0l-9.708-9.708 9.708-9.708c0-0 0-0 0-0 0.105-0.105 0.18-0.227 0.229-0.357 0.133-0.356 0.057-0.771-0.229-1.057l-4.586-4.586c-0.286-0.286-0.702-0.361-1.057-0.229-0.13 0.048-0.252 0.124-0.357 0.228 0 0-0 0-0 0l-9.708 9.708-9.708-9.708c-0-0-0-0-0-0-0.105-0.104-0.227-0.18-0.357-0.228-0.356-0.133-0.771-0.057-1.057 0.229l-4.586 4.586c-0.286 0.286-0.361 0.702-0.229 1.057 0.049 0.13 0.124 0.252 0.229 0.357 0 0 0 0 0 0l9.708 9.708-9.708 9.708c-0 0-0 0-0 0-0.104 0.105-0.18 0.227-0.229 0.357-0.133 0.355-0.057 0.771 0.229 1.057l4.586 4.586c0.286 0.286 0.702 0.361 1.057 0.229 0.13-0.049 0.252-0.124 0.357-0.229 0-0 0-0 0-0l9.708-9.708 9.708 9.708c0 0 0 0 0 0 0.105 0.105 0.227 0.18 0.357 0.229 0.356 0.133 0.771 0.057 1.057-0.229l4.586-4.586c0.286-0.286 0.362-0.702 0.229-1.057-0.049-0.13-0.124-0.252-0.229-0.357z"></path></svg></a>
+              <a href="javascript:;" onclick="remove_btn()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31.708 25.708c-0-0-0-0-0-0l-9.708-9.708 9.708-9.708c0-0 0-0 0-0 0.105-0.105 0.18-0.227 0.229-0.357 0.133-0.356 0.057-0.771-0.229-1.057l-4.586-4.586c-0.286-0.286-0.702-0.361-1.057-0.229-0.13 0.048-0.252 0.124-0.357 0.228 0 0-0 0-0 0l-9.708 9.708-9.708-9.708c-0-0-0-0-0-0-0.105-0.104-0.227-0.18-0.357-0.228-0.356-0.133-0.771-0.057-1.057 0.229l-4.586 4.586c-0.286 0.286-0.361 0.702-0.229 1.057 0.049 0.13 0.124 0.252 0.229 0.357 0 0 0 0 0 0l9.708 9.708-9.708 9.708c-0 0-0 0-0 0-0.104 0.105-0.18 0.227-0.229 0.357-0.133 0.355-0.057 0.771 0.229 1.057l4.586 4.586c0.286 0.286 0.702 0.361 1.057 0.229 0.13-0.049 0.252-0.124 0.357-0.229 0-0 0-0 0-0l9.708-9.708 9.708 9.708c0 0 0 0 0 0 0.105 0.105 0.227 0.18 0.357 0.229 0.356 0.133 0.771 0.057 1.057-0.229l4.586-4.586c0.286-0.286 0.362-0.702 0.229-1.057-0.049-0.13-0.124-0.252-0.229-0.357z"></path></svg></a>
             </div>
           </div>
         </div>
@@ -531,7 +536,7 @@ function get_bookmarks(){
       </div>
       <div class="block">
         <form id="eval_form" method="post" action="">
-          <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."></textarea>
+          <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."><?php echo empty($eval_data) ? '' : $eval_data; ?></textarea>
           <br/><button name="submit" type="submit" id="submit">Run</button>
           <button name="clearText" type="button" id="clearText" onclick="clear_text()">Clear Text</button>
           <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
