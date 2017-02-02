@@ -436,15 +436,20 @@ function get_bookmarks(){
         wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
       }
       function webSearch(engine) {
+        var search_form = document.search_form;
         switch(engine) {
           case 'bing':
-              document.search_form.action = "//www.bing.com/search";
+              search_form.action = "//www.bing.com/search";
               break;
           case 'duckduckgo':
-              document.search_form.action = "//duckduckgo.com/";
+              search_form.action = "//duckduckgo.com/";
+              break;
+          case 'explainshell':
+              search_form.getElementsByClassName("search_param")[0].setAttribute('name','cmd');
+              search_form.action = "//explainshell.com/explain";
               break;
           default:
-              document.search_form.action = "//www.google.com/search";
+              search_form.action = "//www.google.com/search";
         }
       }
       function show_bm_block(){
@@ -486,10 +491,11 @@ function get_bookmarks(){
         <div class="block search clearfix center">
           <div class="col-12 clearfix">
             <form name="search_form" method="get" action="//www.google.com/search">
-              <input type="text" name="q" size="50" maxlength="255" value="" placeholder="Search in the web"/>
+              <input type="text" name="q" class="search_param" size="50" maxlength="255" value="" placeholder="Search in the web"/>
               <input type="submit" value="Google" onclick="webSearch('google');" />
               <input type="submit" value="Bing" onclick="webSearch('bing');" />
               <input type="submit" value="DuckDuckGo" onclick="webSearch('duckduckgo');" />
+              <input type="submit" value="ExplainShell" onclick="webSearch('explainshell');" />
             </form>
           </div>
         </div>
