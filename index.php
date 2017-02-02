@@ -6,11 +6,22 @@ $phpMyAdmin_Url = $localhost_url . "/pma";
 $adminer_url = $localhost_url . "/adm";
 $current_script_url = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'];
 $current_dir_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
-
+$db_name="pretty_index.sqlite";
+$file_db;
+$isBookmark=isset($_POST['bookmark_name']) && isset($_POST['bookmark_url']);
 // menu bookmarks
 $bookmarks = array();
 $bookmarks['phpMyAdmin'] = $phpMyAdmin_Url;
 $bookmarks['Adminer'] = $adminer_url;
+
+// custom bookmarks
+try{
+  $file_db = new PDO("sqlite:$db_name");
+  $file_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  $file_db->exec("CREATE TABLE IF NOT EXISTS bookmarks (id INTEGER PRIMARY KEY, title TEXT, url TEXT NOT NULL UNIQUE)");
+}catch(PDOException $e) {
+  echo $e->getMessage();
+}
 
 // booleans
 $get_public_ip = true;
@@ -31,12 +42,15 @@ $php_tz = date_default_timezone_get();
 
 if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
   if(isset($_POST['eval_code'])){
-    $name = trim($_POST['eval_code']);
+    $eval_data = trim($_POST['eval_code']);
     ob_start();
-    eval($name);
+    eval($eval_data);
     $eval_output = ob_get_contents();
     ob_end_clean();
     echo $eval_output;
+    return;
+  }else if($isBookmark){
+    set_bookmark();
     return;
   }else{
     return;
@@ -46,6 +60,10 @@ if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
 if ( isset($_REQUEST['phpinfo']) and $_REQUEST['phpinfo'] == 1 ) {
   phpinfo();
   return;
+}
+if ( isset($_REQUEST['delete']) ) {
+  $bm_id = $_REQUEST['delete'];
+  $GLOBALS["file_db"]->exec("DELETE from  bookmarks WHERE id='$bm_id'");
 }
 
 // functions
@@ -73,7 +91,6 @@ function getLocalAddress() {
   return "N/A";
 } // end of getLocalAddress()
 
-
 function getDirContents( $dir = __DIR__ ) {
   $directories = array();
   $files_list  = array();
@@ -90,14 +107,37 @@ function getDirContents( $dir = __DIR__ ) {
   return array( $directories, $files_list );
 }
 
-
 function getPublicAddress() {
   $api_url = "https://api.ipify.org?format=json";
-  $data = file_get_contents($api_url);
+  $data = @file_get_contents($api_url);
   $obj = json_decode($data);
-  return $obj->ip;
+  return @$obj->ip;
 }
 
+function set_bookmark(){
+  if(!empty($_POST['bookmark_name']) && !empty($_POST['bookmark_url'])){
+    $insertData=array($_POST['bookmark_name'], $_POST['bookmark_url']);
+    try{
+      $GLOBALS["file_db"]->exec("INSERT INTO bookmarks (id, title, url) VALUES (null, '$insertData[0]', '$insertData[1]')");
+    }catch(PDOException $e) {
+      // echo $e->getMessage();
+    }
+  }
+}
+
+function get_bookmarks(){
+  $data=array();
+  try{
+    $result = $GLOBALS["file_db"]->query("SELECT * FROM bookmarks;");
+    echo '<ul id="bookmarks-list">';
+    foreach($result as $key=>$row) {
+      echo "<li class='bookmarks'><a href='".$row['url']."' data-bookmark-id=".$row['id']." target='_blank'>".$row['title']."</a></li>";
+    }
+    echo '</ul>';
+  }catch(PDOException $e) {
+    // echo $e->getMessage();
+  }
+}
 ?>
 
 <!DOCTYPE html>
@@ -134,6 +174,9 @@ function getPublicAddress() {
       }
       * html .clearfix { zoom: 1; }
       *:first-child+html .clearfix { zoom: 1; }
+      body{
+        background-color: #666666;
+      }
       a {
         text-decoration: none !important;
         background: none !important;
@@ -155,11 +198,17 @@ function getPublicAddress() {
       .center {
         text-align: center;
       }
-      .left {
+      .text-left {
         text-align: left;
       }
-      .right {
+      .text-right {
         text-align: right;
+      }
+      .left{
+        float: left;
+      }
+      .right{
+        float: right;
       }
       div.block {
         border: 1px solid #000;
@@ -173,8 +222,13 @@ function getPublicAddress() {
         overflow: auto;
       }
       .menu {
-        padding: 0 4px;
+        padding: 0 4px 0 0;
         font-size: 14px;
+        font-weight: bold;
+      }
+      input{
+        padding-left: 2px;
+        padding-right: 2px;
       }
       textarea.code {
         width:100%;
@@ -188,9 +242,6 @@ function getPublicAddress() {
         display: inline-block;
         margin: 0 1vw;
       }
-      .host_info{
-        text-align: center;
-      }
       .block.search{
         padding-top: 7px;
         padding-bottom: 7px;
@@ -200,6 +251,34 @@ function getPublicAddress() {
       }
       .current-dir:hover{
         background-color: lightblue;
+      }
+      .bm-list-wrapper{
+        overflow: hidden;
+      }
+      ul{
+        padding: 0;
+        margin: 0;
+      }
+      .bookmarks{
+        display: inline-block;
+        padding: 0 5px 5px 5px;
+      }
+      .exterminate a{
+        color: red;
+      }
+      .exterminate .bookmarks:hover{
+        text-decoration: line-through;
+      }
+      #bm-form-wrapper{
+        padding-top: 2px;
+        padding-bottom: 4px;
+      }
+      #bm-list{
+        max-width: 700px;
+        margin-left: 10px;
+      }
+      #bookmark_form{
+        text-align: center;
       }
       ::-webkit-scrollbar {
         width: 6px;
@@ -224,9 +303,44 @@ function getPublicAddress() {
     <script type="text/javascript">
       // console.log('Hello, world!');
     </script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script>
+      (function() {
+        if(navigator.onLine){
+          var addJquery = document.createElement("script");
+          addJquery.async = false;
+          addJquery.type = "text/javascript";
+          addJquery.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js";
+          var node = document.getElementsByTagName("script")[0];
+          node.parentNode.insertBefore(addJquery, node);
+        }
+      })();
+    </script>
     <script type="text/javascript">
       window.onload = function() {
+        function bookmark_delete(){
+          var bm_list = document.getElementById('bookmarks-list');
+          bm_list.addEventListener('click', function(event) {
+            if (bm_list.className == "exterminate") {
+              var clickedEl = event.target;
+              if(clickedEl.tagName === 'A') {
+                event.preventDefault();
+                var listItem = clickedEl.parentNode;
+                listItem.parentNode.removeChild(listItem);
+                var bm_id = clickedEl.getAttribute('data-bookmark-id');
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("POST", window.location.href, true);
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhttp.send("delete=" + bm_id);
+              }
+            }
+          });
+        }
+        bookmark_delete();
+        <?php
+        if($isBookmark){
+          set_bookmark();
+        }
+        ?>
         jstime('datetime');
         document.getElementById('eval_output').style.display='none';
         if (window.jQuery) {
@@ -268,9 +382,9 @@ function getPublicAddress() {
             ?>
             document.getElementById('eval_output').style.display='block';
             <?php
-              $name = trim($_POST['eval_code']);
+              $eval_data = trim($_POST['eval_code']);
               ob_start();
-              eval($name);
+              eval($eval_data);
               $eval_output = ob_get_contents();
               ob_end_clean();
             }
@@ -322,16 +436,29 @@ function getPublicAddress() {
         wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
       }
       function webSearch(engine) {
+        var search_form = document.search_form;
         switch(engine) {
           case 'bing':
-              document.search_form.action = "//www.bing.com/search";
+              search_form.action = "//www.bing.com/search";
               break;
           case 'duckduckgo':
-              document.search_form.action = "//duckduckgo.com/";
+              search_form.action = "//duckduckgo.com/";
+              break;
+          case 'explainshell':
+              search_form.getElementsByClassName("search_param")[0].setAttribute('name','cmd');
+              search_form.action = "//explainshell.com/explain";
               break;
           default:
-              document.search_form.action = "//www.google.com/search";
+              search_form.action = "//www.google.com/search";
         }
+      }
+      function show_bm_block(){
+        var bm_form_wrapper = document.getElementById('bm-form-wrapper');
+        bm_form_wrapper.style.display = bm_form_wrapper.style.display === 'none' ? 'block' : 'none';
+      }
+      function remove_btn(){
+        var bm_list = document.getElementById('bookmarks-list');
+        bm_list.classList.toggle('exterminate');
       }
     </script>
   </head>
@@ -344,7 +471,7 @@ function getPublicAddress() {
         <div class="block center">
           <h3 id="datetime"><?php echo $date_time; ?></h3>
         </div>
-        <div class="block host_info clearfix">
+        <div class="block center clearfix">
           <div class="col-12">
             <div class="col-6 first">
               <p>Public IP : <b><?php echo $public_addr; ?></b></p>
@@ -364,10 +491,11 @@ function getPublicAddress() {
         <div class="block search clearfix center">
           <div class="col-12 clearfix">
             <form name="search_form" method="get" action="//www.google.com/search">
-              <input type="text" name="q" size="50" maxlength="255" value="" placeholder="Search in the web"/>
+              <input type="text" name="q" class="search_param" size="50" maxlength="255" value="" placeholder="Search in the web"/>
               <input type="submit" value="Google" onclick="webSearch('google');" />
               <input type="submit" value="Bing" onclick="webSearch('bing');" />
               <input type="submit" value="DuckDuckGo" onclick="webSearch('duckduckgo');" />
+              <input type="submit" value="ExplainShell" onclick="webSearch('explainshell');" />
             </form>
           </div>
         </div>
@@ -381,13 +509,30 @@ function getPublicAddress() {
             ?>
           </div>
         </div>
-
+        <div id="bm-form-wrapper" class="block" style="display: none;">
+          <form id="bookmark_form" method="post" action="">
+            <label for="bookmark_name">Title: </label><input type="text" name="bookmark_name" id="bookmark_name" placeholder="Enter bookmark title">
+            <label for="bookmark_url">URL: </label><input type="text" name="bookmark_url" id="bookmark_url" placeholder="Enter URL to bookmark">
+            <input type="submit" name="submit" value="Bookmark">
+          </form>
+        </div>
+        <div class="block" id="bookmark_wrapper">
+          <div class="bm-list-wrapper">
+            <div class="left">
+              <a href="javascript:;" onclick="show_bm_block()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31 12h-11v-11c0-0.552-0.448-1-1-1h-6c-0.552 0-1 0.448-1 1v11h-11c-0.552 0-1 0.448-1 1v6c0 0.552 0.448 1 1 1h11v11c0 0.552 0.448 1 1 1h6c0.552 0 1-0.448 1-1v-11h11c0.552 0 1-0.448 1-1v-6c0-0.552-0.448-1-1-1z"></path></svg></a>
+            </div>
+            <div id="bm-list" style="display: inline-block;"><?php get_bookmarks(); ?></div>
+            <div class="right">
+              <a href="javascript:;" onclick="remove_btn()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31.708 25.708c-0-0-0-0-0-0l-9.708-9.708 9.708-9.708c0-0 0-0 0-0 0.105-0.105 0.18-0.227 0.229-0.357 0.133-0.356 0.057-0.771-0.229-1.057l-4.586-4.586c-0.286-0.286-0.702-0.361-1.057-0.229-0.13 0.048-0.252 0.124-0.357 0.228 0 0-0 0-0 0l-9.708 9.708-9.708-9.708c-0-0-0-0-0-0-0.105-0.104-0.227-0.18-0.357-0.228-0.356-0.133-0.771-0.057-1.057 0.229l-4.586 4.586c-0.286 0.286-0.361 0.702-0.229 1.057 0.049 0.13 0.124 0.252 0.229 0.357 0 0 0 0 0 0l9.708 9.708-9.708 9.708c-0 0-0 0-0 0-0.104 0.105-0.18 0.227-0.229 0.357-0.133 0.355-0.057 0.771 0.229 1.057l4.586 4.586c0.286 0.286 0.702 0.361 1.057 0.229 0.13-0.049 0.252-0.124 0.357-0.229 0-0 0-0 0-0l9.708-9.708 9.708 9.708c0 0 0 0 0 0 0.105 0.105 0.227 0.18 0.357 0.229 0.356 0.133 0.771 0.057 1.057-0.229l4.586-4.586c0.286-0.286 0.362-0.702 0.229-1.057-0.049-0.13-0.124-0.252-0.229-0.357z"></path></svg></a>
+            </div>
+          </div>
+        </div>
         <a onclick="collapseDirContents();" href="javascript:;">
           <div class="block clearfix center current-dir">Current directory: <?php echo __DIR__; ?></div>
         </a>
         <div id="directory_index" class="block directory_index clearfix" style="display: none;">
           <div id="dir-contents" class="col-12">
-            <div class="col-6 left" >
+            <div class="col-6 text-left" >
               <p>Directories</p><hr>
               <?php
               foreach( $directories as $folder ) {
@@ -395,7 +540,7 @@ function getPublicAddress() {
               }
               ?>
             </div>
-            <div class="col-6 right">
+            <div class="col-6 text-right">
               <p>Files</p><hr>
               <?php
               foreach( $files as $file ) {
@@ -408,7 +553,7 @@ function getPublicAddress() {
       </div>
       <div class="block">
         <form id="eval_form" method="post" action="">
-          <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."></textarea>
+          <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."><?php echo empty($eval_data) ? '' : $eval_data; ?></textarea>
           <br/><button name="submit" type="submit" id="submit">Run</button>
           <button name="clearText" type="button" id="clearText" onclick="clear_text()">Clear Text</button>
           <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
@@ -417,7 +562,7 @@ function getPublicAddress() {
       <div id="eval_output" class="block eval_output">
         <p><?php if(isset($eval_output)) { echo $eval_output; } ?></p>
       </div>
-      <footer><div class="right"><a href="https://github.com/sohelamankhan/pretty_index" target="_blank"><i>Pretty Index</i></a></div></footer>
+      <footer><div class="text-right"><a href="https://github.com/sohelamankhan/pretty_index" target="_blank"><i>Pretty Index</i></a></div></footer>
     </div>
   </body>
 </html>
