@@ -109,9 +109,9 @@ function getDirContents( $dir = __DIR__ ) {
 
 function getPublicAddress() {
   $api_url = "https://api.ipify.org?format=json";
-  $data = file_get_contents($api_url);
+  $data = @file_get_contents($api_url);
   $obj = json_decode($data);
-  return $obj->ip;
+  return @$obj->ip;
 }
 
 function set_bookmark(){
@@ -303,7 +303,18 @@ function get_bookmarks(){
     <script type="text/javascript">
       // console.log('Hello, world!');
     </script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script>
+      (function() {
+        if(navigator.onLine){
+          var addJquery = document.createElement("script");
+          addJquery.async = false;
+          addJquery.type = "text/javascript";
+          addJquery.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js";
+          var node = document.getElementsByTagName("script")[0];
+          node.parentNode.insertBefore(addJquery, node);
+        }
+      })();
+    </script>
     <script type="text/javascript">
       window.onload = function() {
         function bookmark_delete(){
