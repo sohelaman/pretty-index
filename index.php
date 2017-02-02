@@ -109,9 +109,9 @@ function getDirContents( $dir = __DIR__ ) {
 
 function getPublicAddress() {
   $api_url = "https://api.ipify.org?format=json";
-  $data = file_get_contents($api_url);
+  $data = @file_get_contents($api_url);
   $obj = json_decode($data);
-  return $obj->ip;
+  return @$obj->ip;
 }
 
 function set_bookmark(){
@@ -303,7 +303,18 @@ function get_bookmarks(){
     <script type="text/javascript">
       // console.log('Hello, world!');
     </script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script>
+      (function() {
+        if(navigator.onLine){
+          var addJquery = document.createElement("script");
+          addJquery.async = false;
+          addJquery.type = "text/javascript";
+          addJquery.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js";
+          var node = document.getElementsByTagName("script")[0];
+          node.parentNode.insertBefore(addJquery, node);
+        }
+      })();
+    </script>
     <script type="text/javascript">
       window.onload = function() {
         function bookmark_delete(){
@@ -425,15 +436,20 @@ function get_bookmarks(){
         wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
       }
       function webSearch(engine) {
+        var search_form = document.search_form;
         switch(engine) {
           case 'bing':
-              document.search_form.action = "//www.bing.com/search";
+              search_form.action = "//www.bing.com/search";
               break;
           case 'duckduckgo':
-              document.search_form.action = "//duckduckgo.com/";
+              search_form.action = "//duckduckgo.com/";
+              break;
+          case 'explainshell':
+              search_form.getElementsByClassName("search_param")[0].setAttribute('name','cmd');
+              search_form.action = "//explainshell.com/explain";
               break;
           default:
-              document.search_form.action = "//www.google.com/search";
+              search_form.action = "//www.google.com/search";
         }
       }
       function show_bm_block(){
@@ -475,10 +491,11 @@ function get_bookmarks(){
         <div class="block search clearfix center">
           <div class="col-12 clearfix">
             <form name="search_form" method="get" action="//www.google.com/search">
-              <input type="text" name="q" size="50" maxlength="255" value="" placeholder="Search in the web"/>
+              <input type="text" name="q" class="search_param" size="50" maxlength="255" value="" placeholder="Search in the web"/>
               <input type="submit" value="Google" onclick="webSearch('google');" />
               <input type="submit" value="Bing" onclick="webSearch('bing');" />
               <input type="submit" value="DuckDuckGo" onclick="webSearch('duckduckgo');" />
+              <input type="submit" value="ExplainShell" onclick="webSearch('explainshell');" />
             </form>
           </div>
         </div>
