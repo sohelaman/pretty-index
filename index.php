@@ -1,134 +1,12 @@
 <?php
 
+$pi = new Pi();
 $current_dir_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
-$db_name="pretty_index.sqlite";
-$file_db;
-$isBookmark=isset($_POST['bookmark_name']) && isset($_POST['bookmark_url']);
+list( $directories, $files ) = $pi->getDirContents();
+$local_addr = $pi->getLocalAddress();
+$public_addr = true ? $pi->getPublicAddress() : 'N/A';
+$bookmarks = $pi->getBookmarks();
 
-// custom bookmarks
-try{
-  $file_db = new PDO("sqlite:$db_name");
-  $file_db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $file_db->exec("CREATE TABLE IF NOT EXISTS bookmarks (id INTEGER PRIMARY KEY, title TEXT, url TEXT NOT NULL UNIQUE)");
-}catch(PDOException $e) {
-  echo $e->getMessage();
-}
-
-// booleans
-$get_public_ip = true;
-
-// core
-$date_time = date('l, F j, H:i:s');
-$host_name = getHostName();
-$host_ip = getHostByName($host_name);
-$remote_ip = $_SERVER['REMOTE_ADDR'];
-list( $directories, $files ) = getDirContents();
-$local_addr = getLocalAddress();
-$public_addr = ( $get_public_ip ) ? getPublicAddress() : 'N/A';
-$doc_root = $_SERVER['DOCUMENT_ROOT'];
-$php_version = phpversion();
-$php_ini = php_ini_loaded_file();
-$php_tz = date_default_timezone_get();
-
-
-if( isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ){
-  if(isset($_POST['eval_code'])){
-    $eval_data = trim($_POST['eval_code']);
-    ob_start();
-    eval($eval_data);
-    $eval_output = ob_get_contents();
-    ob_end_clean();
-    echo $eval_output;
-    return;
-  }else if($isBookmark){
-    set_bookmark();
-    return;
-  }else{
-    return;
-  }
-}
-
-if ( isset($_REQUEST['phpinfo']) and $_REQUEST['phpinfo'] == 1 ) {
-  phpinfo();
-  return;
-}
-if ( isset($_REQUEST['delete']) ) {
-  $bm_id = $_REQUEST['delete'];
-  $GLOBALS["file_db"]->exec("DELETE from  bookmarks WHERE id='$bm_id'");
-}
-
-// functions
-
-function getLocalAddress() {
-  if(strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
-    exec("ipconfig /all", $output);
-    foreach($output as $line) {
-      if(preg_match("/(.*)IPv4 Address(.*)/", $line)) {
-        if( preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match) ) {
-          if( filter_var($match[0], FILTER_VALIDATE_IP) ) { return trim($match[0]); }
-        }
-      }
-    } // endforeach
-  } else if(strtoupper(PHP_OS) == 'LINUX') {
-    $methods = array();
-    $methods[] = function() { return `ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`; };
-    $methods[] = function() { return `ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`; };
-    $methods[] = function() { return `ip route get 1 | awk '{print $NF;exit}'`; };
-    foreach( $methods as $method ) {
-      $ip = trim($method());
-      if( filter_var($ip, FILTER_VALIDATE_IP) ) { return $ip; }
-    } // endforeach
-  }
-  return "N/A";
-} // end of getLocalAddress()
-
-function getDirContents( $dir = __DIR__ ) {
-  $directories = array();
-  $files_list  = array();
-  $files = scandir($dir);
-  foreach($files as $file) {
-     if(($file != '.') && ($file != '..')) {
-        if(is_dir($dir . '/' . $file)) {
-          $directories[] = $file;
-        } else {
-          $files_list[] = $file;
-        }
-     }
-  }
-  return array( $directories, $files_list );
-}
-
-function getPublicAddress() {
-  $api_url = "https://api.ipify.org?format=json";
-  $data = @file_get_contents($api_url);
-  $obj = json_decode($data);
-  return @$obj->ip;
-}
-
-function set_bookmark(){
-  if(!empty($_POST['bookmark_name']) && !empty($_POST['bookmark_url'])){
-    $insertData=array($_POST['bookmark_name'], $_POST['bookmark_url']);
-    try{
-      $GLOBALS["file_db"]->exec("INSERT INTO bookmarks (id, title, url) VALUES (null, '$insertData[0]', '$insertData[1]')");
-    }catch(PDOException $e) {
-      // echo $e->getMessage();
-    }
-  }
-}
-
-function get_bookmarks(){
-  $data=array();
-  try{
-    $result = $GLOBALS["file_db"]->query("SELECT * FROM bookmarks;");
-    echo '<ul id="bookmarks-list">';
-    foreach($result as $key=>$row) {
-      echo "<li class='bookmarks'><a href='".$row['url']."' data-bookmark-id=".$row['id']." target='_blank'>".$row['title']."</a></li>";
-    }
-    echo '</ul>';
-  }catch(PDOException $e) {
-    // echo $e->getMessage();
-  }
-}
 ?>
 
 <!DOCTYPE html>
@@ -210,11 +88,6 @@ function get_bookmarks(){
           });
         }
         bookmark_delete();
-        <?php
-        if($isBookmark){
-          set_bookmark();
-        }
-        ?>
         jstime('datetime');
         document.getElementById('eval_output').style.display='none';
         if (window.jQuery) {
@@ -339,25 +212,25 @@ function get_bookmarks(){
   <body>
     <div class="container">
       <div class="block center">
-        <a href="javascript:location.reload();"><h1>localhost | <?php echo $host_ip; ?></h1></a>
+        <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
       </div>
       <div id="info_wrapper">
         <div class="block center">
-          <h3 id="datetime"><?php echo $date_time; ?></h3>
+          <h3 id="datetime"><?php echo date('l, F j, H:i:s'); ?></h3>
         </div>
         <div class="block center clearfix">
           <div class="col-12">
             <div class="col-6 first">
               <p>Public IP : <b><?php echo $public_addr; ?></b></p>
               <p>LAN IP : <b><?php echo $local_addr; ?></b></p>
-              <p>Host IP : <b><?php echo $host_ip; ?></b></p>
-              <p>Remote IP : <b><?php echo $remote_ip; ?></b></p>
+              <p>Host IP : <b><?php echo getHostByName( getHostName() ); ?></b></p>
+              <p>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></p>
             </div>
             <div class="col-6 last">
-              <p>Document Root : <b><?php echo $doc_root; ?></b></p>
-              <p>PHP Version : <b><?php echo $php_version; ?> (<a href="javascript:phpi();">phpinfo</a>)</b></p>
-              <p>PHP Loaded INI : <b><?php echo $php_ini; ?></b></p>
-              <p>PHP Timezone : <b><?php echo $php_tz; ?></b></p>
+              <p>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></p>
+              <p>PHP Version : <b><?php echo phpversion(); ?> (<a href="javascript:phpi();">phpinfo</a>)</b></p>
+              <p>PHP Loaded INI : <b><?php echo php_ini_loaded_file(); ?></b></p>
+              <p>PHP Timezone : <b><?php echo date_default_timezone_get(); ?></b></p>
             </div>
           </div>
         </div>
@@ -385,7 +258,13 @@ function get_bookmarks(){
             <div class="left">
               <a href="javascript:;" onclick="show_bm_block()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31 12h-11v-11c0-0.552-0.448-1-1-1h-6c-0.552 0-1 0.448-1 1v11h-11c-0.552 0-1 0.448-1 1v6c0 0.552 0.448 1 1 1h11v11c0 0.552 0.448 1 1 1h6c0.552 0 1-0.448 1-1v-11h11c0.552 0 1-0.448 1-1v-6c0-0.552-0.448-1-1-1z"></path></svg></a>
             </div>
-            <div id="bm-list" style="display: inline-block;"><?php get_bookmarks(); ?></div>
+            <div id="bm-list" style="display: inline-block;">
+              <ul id="bookmarks-list">
+                <?php foreach($bookmarks as $row) { ?>
+                  <li class="bookmarks"><a href="<?php echo $row['url'];?>" data-bookmark-id="<?php echo $row['id'];?>" target="_blank"><?php echo $row['title'];?></a></li>
+                <?php } ?>
+              </ul>
+            </div>
             <div class="right">
               <a href="javascript:;" onclick="remove_btn()"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 32 32"><path d="M31.708 25.708c-0-0-0-0-0-0l-9.708-9.708 9.708-9.708c0-0 0-0 0-0 0.105-0.105 0.18-0.227 0.229-0.357 0.133-0.356 0.057-0.771-0.229-1.057l-4.586-4.586c-0.286-0.286-0.702-0.361-1.057-0.229-0.13 0.048-0.252 0.124-0.357 0.228 0 0-0 0-0 0l-9.708 9.708-9.708-9.708c-0-0-0-0-0-0-0.105-0.104-0.227-0.18-0.357-0.228-0.356-0.133-0.771-0.057-1.057 0.229l-4.586 4.586c-0.286 0.286-0.361 0.702-0.229 1.057 0.049 0.13 0.124 0.252 0.229 0.357 0 0 0 0 0 0l9.708 9.708-9.708 9.708c-0 0-0 0-0 0-0.104 0.105-0.18 0.227-0.229 0.357-0.133 0.355-0.057 0.771 0.229 1.057l4.586 4.586c0.286 0.286 0.702 0.361 1.057 0.229 0.13-0.049 0.252-0.124 0.357-0.229 0-0 0-0 0-0l9.708-9.708 9.708 9.708c0 0 0 0 0 0 0.105 0.105 0.227 0.18 0.357 0.229 0.356 0.133 0.771 0.057 1.057-0.229l4.586-4.586c0.286-0.286 0.362-0.702 0.229-1.057-0.049-0.13-0.124-0.252-0.229-0.357z"></path></svg></a>
             </div>
@@ -430,3 +309,114 @@ function get_bookmarks(){
     </div>
   </body>
 </html>
+
+
+<?php
+
+class Pi {
+  const DB = 'pretty_index.sqlite';
+  private $_pdo = null;
+
+  function __construct() {
+    $this->_setupStorage();
+    $this->_handleRequests();
+  }
+
+  private function _handleRequests() {
+    if ( !empty($_REQUEST['phpinfo']) and $_REQUEST['phpinfo'] == 1 ) {
+      phpinfo();
+      exit;
+    } else if( !empty($_POST['bookmark_name']) and !empty($_POST['bookmark_url']) ) {
+      $this->saveBookmark( $_POST['bookmark_name'], $_POST['bookmark_url'] );
+    } else if ( !empty($_REQUEST['delete']) ) {
+      $this->deleteBookmark($_REQUEST['delete']);
+    } else if( !empty($_POST['eval_code']) and isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ) {
+      $eval_data = trim($_POST['eval_code']);
+      ob_start();
+      eval($eval_data);
+      $eval_output = ob_get_contents();
+      ob_end_clean();
+      echo $eval_output;
+      exit;
+    }
+  } // end of _handleRequests()
+
+  private function _setupStorage() {
+    try {
+      $this->_pdo = new PDO( "sqlite:" . self::DB );
+      $this->_pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+      $this->_pdo->exec("CREATE TABLE IF NOT EXISTS bookmarks (id INTEGER PRIMARY KEY, title TEXT NOT NULL UNIQUE, url TEXT NOT NULL UNIQUE)");
+    } catch( PDOException $e ) {
+      echo $e->getMessage();
+    }
+  } // end of _setupStorage()
+
+  private function _query( $sql ) {
+    try {
+      return !empty($this->_pdo) ? $this->_pdo->query($sql) : false;
+    } catch (Exception $e) {
+      echo $e->getMessage();
+    }
+  }
+
+  public function getLocalAddress() {
+    if(strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+      exec("ipconfig /all", $output);
+      foreach($output as $line) {
+        if(preg_match("/(.*)IPv4 Address(.*)/", $line)) {
+          if( preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match) ) {
+            if( filter_var($match[0], FILTER_VALIDATE_IP) ) { return trim($match[0]); }
+          }
+        }
+      } // endforeach
+    } else if(strtoupper(PHP_OS) == 'LINUX') {
+      $methods = array();
+      $methods[] = function() { return `ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'`; };
+      $methods[] = function() { return `ifconfig | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'`; };
+      $methods[] = function() { return `ip route get 1 | awk '{print $NF;exit}'`; };
+      foreach( $methods as $method ) {
+        $ip = trim($method());
+        if( filter_var($ip, FILTER_VALIDATE_IP) ) { return $ip; }
+      } // endforeach
+    }
+    return "N/A";
+  } // end of getLocalAddress()
+
+  public function getPublicAddress() {
+    $api_url = "https://api.ipify.org?format=json";
+    $data = @file_get_contents($api_url);
+    $obj = json_decode($data);
+    return @$obj->ip;
+  }
+
+  public function getDirContents( $dir = __DIR__ ) {
+    $directories = array();
+    $files_list  = array();
+    $files = scandir($dir);
+    foreach($files as $file) {
+       if(($file != '.') && ($file != '..')) {
+          if(is_dir($dir . '/' . $file)) {
+            $directories[] = $file;
+          } else {
+            $files_list[] = $file;
+          }
+       }
+    }
+    return array( $directories, $files_list );
+  }
+
+  public function saveBookmark($title, $url) {
+    $this->_query("INSERT INTO bookmarks (id, title, url) VALUES (NULL, '$title', '$url')");
+  }
+
+  public function deleteBookmark($id) {
+    $this->_query("DELETE FROM bookmarks WHERE id = $id");
+  }
+
+  public function getBookmarks() {
+    return $this->_query("SELECT * FROM bookmarks;");
+  }
+
+} // end of class Pi
+
+?>
