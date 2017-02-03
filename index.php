@@ -1,18 +1,9 @@
 <?php
 
-// config
-$localhost_url = "http://localhost";
-$phpMyAdmin_Url = $localhost_url . "/pma";
-$adminer_url = $localhost_url . "/adm";
-$current_script_url = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'];
 $current_dir_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
 $db_name="pretty_index.sqlite";
 $file_db;
 $isBookmark=isset($_POST['bookmark_name']) && isset($_POST['bookmark_url']);
-// menu bookmarks
-$bookmarks = array();
-$bookmarks['phpMyAdmin'] = $phpMyAdmin_Url;
-$bookmarks['Adminer'] = $adminer_url;
 
 // custom bookmarks
 try{
@@ -380,16 +371,6 @@ function get_bookmarks(){
               <input type="submit" value="DuckDuckGo" onclick="webSearch('duckduckgo');" />
               <input type="submit" value="ExplainShell" onclick="webSearch('explainshell');" />
             </form>
-          </div>
-        </div>
-
-        <div class="block clearfix center">
-          <div class="col-12 ">
-            <?php
-            foreach ($bookmarks as $key => $value) {
-              echo '<div class="menu stretch"><b><a href="' . $value . '">' . $key . '</a></b></div>';
-            }
-            ?>
           </div>
         </div>
         <div id="bm-form-wrapper" class="block" style="display: none;">
