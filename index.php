@@ -146,170 +146,53 @@ function get_bookmarks(){
     <meta charset="UTF-8">
     <title>Localhost</title>
     <style type="text/css">
-      .col-1 {width: 8.33%;}
-      .col-2 {width: 16.66%;}
-      .col-3 {width: 25%;}
-      .col-4 {width: 33.33%;}
-      .col-5 {width: 41.66%;}
-      .col-6 {width: 50%;}
-      .col-7 {width: 58.33%;}
-      .col-8 {width: 66.66%;}
-      .col-9 {width: 75%;}
-      .col-10 {width: 83.33%;}
-      .col-11 {width: 91.66%;}
-      .col-12 {width: 100%;}
+      <?php for( $i=1; $i<13; $i++ ) { $w=$i*8.33; print ".col-{$i} {width: {$w}%;}\n";} ?>
       [class*="col-"] {float: left;}
       @media only screen and (max-width: 768px) {
-        [class*="col-"] {
-          width: 100%;
-        }
+        [class*="col-"] { width: 100%; }
       }
-      .clearfix:after {
-        visibility: hidden;
-        display: block;
-        font-size: 0;
-        content: " ";
-        clear: both;
-        height: 0;
-      }
+      .clearfix:after { visibility: hidden; display: block; font-size: 0; content: " "; clear: both; height: 0; }
       * html .clearfix { zoom: 1; }
       *:first-child+html .clearfix { zoom: 1; }
-      body{
-        background-color: #666666;
-      }
-      a {
-        text-decoration: none !important;
-        background: none !important;
-      }
-      a:hover {
-        color: red;
-      }
-      p{
-        margin: 0;
-        padding: 2px 0;
-      }
-      .container {
-        font-family: monospace;
-        max-width: 768px;
-        background: #DDD;
-        padding: 10px;
-        margin: auto;
-      }
-      .center {
-        text-align: center;
-      }
-      .text-left {
-        text-align: left;
-      }
-      .text-right {
-        text-align: right;
-      }
-      .left{
-        float: left;
-      }
-      .right{
-        float: right;
-      }
-      div.block {
-        border: 1px solid #000;
-        padding: 4px;
-        margin: 8px 4px;
-        overflow: auto;
-      }
-      div.eval_output{
-        max-height: 250px;
-        overflow-wrap: break-word;
-        overflow: auto;
-      }
-      .menu {
-        padding: 0 4px 0 0;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      input{
-        padding-left: 2px;
-        padding-right: 2px;
-      }
-      textarea.code {
-        width:100%;
-        height:100%;
-        max-width: 100%;
-        box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        -webkit-box-sizing: border-box;
-      }
-      .stretch{
-        display: inline-block;
-        margin: 0 1vw;
-      }
-      .block.search{
-        padding-top: 7px;
-        padding-bottom: 7px;
-      }
-      .directory_index{
-        /*max-height: 20vh;*/
-      }
-      .current-dir:hover{
-        background-color: lightblue;
-      }
-      .bm-list-wrapper{
-        overflow: hidden;
-      }
-      ul{
-        padding: 0;
-        margin: 0;
-      }
-      .bookmarks{
-        display: inline-block;
-        padding: 0 5px 5px 5px;
-      }
-      .exterminate a{
-        color: red;
-      }
-      .exterminate .bookmarks:hover{
-        text-decoration: line-through;
-      }
-      #bm-form-wrapper{
-        padding-top: 2px;
-        padding-bottom: 4px;
-      }
-      #bm-list{
-        max-width: 700px;
-        margin-left: 10px;
-      }
-      #bookmark_form{
-        text-align: center;
-      }
-      ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }/* Track */
-      ::-webkit-scrollbar-track {
-        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-        -webkit-border-radius: 10px;
-        border-radius: 10px;
-      }
+      body { background-color: #666666; }
+      a { text-decoration: none !important; background: none !important; }
+      a:hover { color: red; }
+      p { margin: 0; padding: 2px 0; }
+      .container { font-family: monospace; max-width: 768px; background: #DDD; padding: 10px; margin: auto; }
+      .center { text-align: center; }
+      .text-left { text-align: left; }
+      .text-right { text-align: right; }
+      .left { float: left; }
+      .right { float: right; }
+      div.block { border: 1px solid #000; padding: 4px; margin: 8px 4px; overflow: auto; }
+      div.eval_output{ max-height: 250px; overflow-wrap: break-word; overflow: auto; }
+      .menu { padding: 0 4px 0 0; font-size: 14px; font-weight: bold; }
+      input { padding-left: 2px; padding-right: 2px; }
+      textarea.code { width:100%; height:100%; max-width: 100%; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; }
+      .stretch { display: inline-block; margin: 0 1vw; }
+      .block.search { padding-top: 7px; padding-bottom: 7px; }
+      .current-dir:hover { background-color: lightblue; }
+      .bm-list-wrapper { overflow: hidden; }
+      ul { padding: 0; margin: 0; }
+      .bookmarks { display: inline-block; padding: 0 5px 5px 5px; }
+      .exterminate a { color: red; }
+      .exterminate .bookmarks:hover { text-decoration: line-through; }
+      #bm-form-wrapper { padding-top: 2px; padding-bottom: 4px; }
+      #bm-list{ max-width: 700px; margin-left: 10px; }
+      #bookmark_form{ text-align: center; }
+      ::-webkit-scrollbar { width: 6px; height: 6px; } /* Track */
+      ::-webkit-scrollbar-track { -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); -webkit-border-radius: 10px; border-radius: 10px; }
        /* Handle */
-      ::-webkit-scrollbar-thumb {
-        -webkit-border-radius: 10px;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.8);
-        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
-      }
-      ::-webkit-scrollbar-thumb:window-inactive {
-        background: rgba(0,0,0,0.4);
-      }
+      ::-webkit-scrollbar-thumb { -webkit-border-radius: 10px; border-radius: 10px; background: rgba(0,0,0,0.8); -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); }
+      ::-webkit-scrollbar-thumb:window-inactive { background: rgba(0,0,0,0.4); }
     </style>
-    <script type="text/javascript">
-      // console.log('Hello, world!');
-    </script>
     <script>
       (function() {
         if(navigator.onLine){
           var addJquery = document.createElement("script");
           addJquery.async = false;
           addJquery.type = "text/javascript";
-          addJquery.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js";
+          addJquery.src = "//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js";
           var node = document.getElementsByTagName("script")[0];
           node.parentNode.insertBefore(addJquery, node);
         }
