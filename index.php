@@ -37,6 +37,7 @@ $errors = $pi->errors;
       .text-right { text-align: right; }
       .left { float: left; }
       .right { float: right; }
+      .hidden { display: none; }
       div.block { border: 1px solid #000; padding: 4px; margin: 8px 4px; overflow: auto; }
       div.eval_output{ max-height: 250px; overflow-wrap: break-word; overflow: auto; }
       .menu { padding: 0 4px 0 0; font-size: 14px; font-weight: bold; }
@@ -95,12 +96,13 @@ $errors = $pi->errors;
         }
         bookmark_delete();
         jstime('datetime');
+        document.getElementById('eval_code').focus();
         document.getElementById('eval_output').style.display='none';
         if (window.jQuery) {
           // jQuery is loaded
           $(document).ready(function() {
             var form = $('#eval_form'); // contact form
-            var submit = $('#submit');  // submit button
+            var submit = $('#runBtnSubmit');  // submit button
             var eval_text = $('#eval_output'); // eval_output div for show alert message
             var info_wrapper = $('#info_wrapper'); // information wrapper
             // form submit event
@@ -115,6 +117,8 @@ $errors = $pi->errors;
                 beforeSend: function() {
                   eval_text.fadeOut();
                   submit.html('Processing...'); // change submit button text
+                  $('#evalErrMsg').html('');
+                  $('#evalErrWrapper').hide();
                 },
                 success: function(data) {
                   eval_text.show(); // show the eval box
@@ -124,6 +128,8 @@ $errors = $pi->errors;
                 },
                 error: function(e) {
                   console.log(e); //show error on console
+                  $('#evalErrMsg').html('Error ' + e.status + ' : ' + e.statusText);
+                  $('#evalErrWrapper').show();
                 }
               });
             });
@@ -174,13 +180,10 @@ $errors = $pi->errors;
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp.send("phpinfo=1");
       }
-      function clear_text() {
-        document.getElementById("eval_code").value='';
-      }
       function reset_text() {
-        clear_text();
+        clearInputValue('eval_code');
         document.getElementById("eval_output").innerHTML='';
-        document.getElementById("submit").innerHTML='Run';
+        document.getElementById("runBtnSubmit").innerHTML='Run';
         document.getElementById("eval_output").style.display='none';
         document.getElementById("info_wrapper").style.display='block';
       }
@@ -202,6 +205,17 @@ $errors = $pi->errors;
           e.preventDefault();
           var win = window.open('//www.google.com/search?q=' + q, '_blank');
           win.focus();
+        }
+      }
+      function codeValidate(e, fieldSelector) {
+        var code = document.getElementById(fieldSelector).value;
+        if( code.trim() == "" ) {
+          e.preventDefault();
+        }
+      }
+      function codeEvalKey(e, elem) {
+        if( elem.value.trim() != "" && (e.ctrlKey || e.metaKey) && (e.keyCode == 13 || e.keyCode == 10) ) { // 13 === enter/return key
+          document.getElementById('runBtnSubmit').click();
         }
       }
       function remove_btn(){
@@ -334,15 +348,18 @@ $errors = $pi->errors;
         </div>
       </div>
       <div class="block">
-        <form id="eval_form" method="post" action="">
-          <textarea class="code" id="eval_code" name="eval_code" rows="4" placeholder="PHP code here..."><?php echo empty($eval_data) ? '' : $eval_data; ?></textarea>
-          <br/><button name="submit" type="submit" id="submit">Run</button>
-          <button name="clearText" type="button" id="clearText" onclick="clear_text()">Clear Text</button>
+        <form id="eval_form" method="post" action="" >
+          <textarea class="code" id="eval_code" name="eval_code" rows="6" onkeypress="codeEvalKey(event, this);" placeholder="PHP code here..."><?php echo empty($eval_data) ? '' : $eval_data; ?></textarea>
+          <br/><button name="submit" type="submit" id="runBtnSubmit" onclick="codeValidate(event, 'eval_code');">Run</button>
+          <button name="clearText" type="button" id="clearText" onclick="clearInputValue('eval_code');">Clear Text</button>
           <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
         </form>
       </div>
       <div id="eval_output" class="block eval_output">
         <p><?php if(isset($eval_output)) { echo $eval_output; } ?></p>
+      </div>
+      <div id="evalErrWrapper" class="block hidden errorbox">
+        <p id="evalErrMsg"></p>
       </div>
       <footer><div class="text-right"><a href="https://github.com/sohelamankhan/pretty_index" target="_blank"><i>Pretty Index</i></a></div></footer>
     </div>
