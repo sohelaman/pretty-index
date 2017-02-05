@@ -43,11 +43,11 @@ $errors = $pi->errors;
       input { padding-left: 2px; padding-right: 2px; }
       textarea.code { width:100%; height:100%; max-width: 100%; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; }
       .stretch { display: inline-block; margin: 0 1vw; }
-      .block.search { padding-top: 7px; padding-bottom: 7px; }
       .current-dir:hover { background-color: lightblue; }
       .bm-list-wrapper { overflow: hidden; }
       ul { padding: 0; margin: 0; }
       .bookmarks { display: inline-block; padding: 1px 4px 2px 4px;}
+      .search_engines li { padding: 2px 0;}
       .exterminate a { color: red; }
       .exterminate .bookmarks:hover { text-decoration: line-through; }
       #bm-form-wrapper { padding-top: 2px; padding-bottom: 4px; }
@@ -188,21 +188,20 @@ $errors = $pi->errors;
         var elem = document.getElementById(elementID);
         elem.style.display = elem.style.display === 'none' ? 'block' : 'none';
       }
-      function webSearch(engine) {
-        var search_form = document.search_form;
-        switch(engine) {
-          case 'bing':
-              search_form.action = "//www.bing.com/search";
-              break;
-          case 'duckduckgo':
-              search_form.action = "//duckduckgo.com/";
-              break;
-          case 'explainshell':
-              search_form.getElementsByClassName("search_param")[0].setAttribute('name','cmd');
-              search_form.action = "//explainshell.com/explain";
-              break;
-          default:
-              search_form.action = "//www.google.com/search";
+      function webSearch(elem) {
+        var uri = elem.getAttribute('data-uri');
+        var query = document.getElementById('search_query').value;
+        var win = window.open(uri + query, '_blank');
+        win.focus();
+      }
+      function clearInputValue(elementID) {
+        document.getElementById(elementID).value = '';
+      }
+      function defaultSearch(e, q) {
+        if(e.keyCode === 13) { // 13 === enter/return key
+          e.preventDefault();
+          var win = window.open('//www.google.com/search?q=' + q, '_blank');
+          win.focus();
         }
       }
       function remove_btn(){
@@ -259,13 +258,27 @@ $errors = $pi->errors;
 
         <div class="block search clearfix center">
           <div class="col-12 clearfix">
-            <form name="search_form" method="get" action="//www.google.com/search">
-              <input type="text" name="q" class="search_param" size="50" maxlength="255" value="" placeholder="Search in the web"/>
-              <input type="submit" value="Google" onclick="webSearch('google');" />
-              <input type="submit" value="Bing" onclick="webSearch('bing');" />
-              <input type="submit" value="DuckDuckGo" onclick="webSearch('duckduckgo');" />
-              <input type="submit" value="ExplainShell" onclick="webSearch('explainshell');" />
-            </form>
+            <ul class="search_engines">
+              <li>
+                <input type="text" id="search_query" size="50" maxlength="255" value="" onkeypress="defaultSearch(event, this.value);" placeholder="Search in the web"/>
+                <input type="button" value=" X " onclick="clearInputValue('search_query');" />
+                <input type="button" value="Google" data-uri="//www.google.com/search?q=" onclick="webSearch(this);" />
+                <input type="button" value="Bing" data-uri="//www.bing.com/search?q=" onclick="webSearch(this);" />
+                <input type="button" value="Dictionary" data-uri="//www.dictionary.com/browse/" onclick="webSearch(this);" />
+              </li>
+              <li>
+                <!-- <input type="button" value="DuckDuckGo" data-uri="//duckduckgo.com/?q=" onclick="webSearch(this);" /> -->
+                <input type="button" value="Github" data-uri="//github.com/search?q=" onclick="webSearch(this);" />
+                <input type="button" value="StackOverFlow" data-uri="//stackoverflow.com/search?q=" onclick="webSearch(this);" />
+                <input type="button" value="Packagist" data-uri="//packagist.org/search/?q=" onclick="webSearch(this);" />
+                <input type="button" value="NPM" data-uri="//www.npmjs.com/search?q=" onclick="webSearch(this);" />
+                <input type="button" value="Bower" data-uri="//bower.io/search/?q=" onclick="webSearch(this);" />
+                <input type="button" value="RubyGems" data-uri="//rubygems.org/search?query=" onclick="webSearch(this);" />
+                <input type="button" value="Libraries.io" data-uri="//libraries.io/search?q=" onclick="webSearch(this);" />
+                <!-- <input type="button" value="NPMS" data-uri="//npms.io/search?q=" onclick="webSearch(this);" /> -->
+                <input type="button" value="Explain Shell" data-uri="//explainshell.com/explain?cmd=" onclick="webSearch(this);" />
+              </li>
+            </ul>
           </div>
         </div>
         <?php if($isBookmarksEnabled) { ?>
