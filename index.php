@@ -4,7 +4,6 @@ $pi = new Pi();
 $current_dir_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
 list( $directories, $files ) = $pi->getDirContents();
 $local_addr = $pi->getLocalAddress();
-$public_addr = true ? $pi->getPublicAddress() : 'N/A';
 $isBookmarksEnabled = !empty($pi->storage);
 $bookmarks = $pi->getBookmarks();
 $errors = $pi->errors;
@@ -98,6 +97,14 @@ $errors = $pi->errors;
         jstime('datetime');
         document.getElementById('eval_code').focus();
         document.getElementById('eval_output').style.display='none';
+        
+        // Ajax load ip from ipfy.org
+        ipfy('https://api.ipify.org?format=json').then( function( response ) {
+          if(response) { document.getElementById('public_ip').innerHTML = JSON.parse(response).ip; }
+        }, function( Error ) {
+          console.log(Error);
+        });
+
         if (window.jQuery) {
           // jQuery is loaded
           $(document).ready(function() {
@@ -235,6 +242,20 @@ $errors = $pi->errors;
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp.send( "addbookmark=1&bookmark_name=" + title + "&bookmark_url=" + encodeURI(url) );
       }
+      function ipfy(url) {
+        return new Promise( function( resolve, reject ) {
+          var request = new XMLHttpRequest();
+          request.open('GET', url);
+          request.onload = function() {
+            if( request.status === 200 )
+              resolve( request.response );
+            else
+              reject( Error('Failed to load IP. Error code: ' + request.statusText) );
+          };
+          request.onerror = function() { reject(Error('Request failed.')); };
+          request.send();
+        });
+      } // end of ipfy()
     </script>
   </head>
   <body>
@@ -256,7 +277,7 @@ $errors = $pi->errors;
         <div class="block center clearfix">
           <div class="col-12">
             <div class="col-6 first">
-              <p>Public IP : <b><?php echo $public_addr; ?></b></p>
+              <p>Public IP : <b><span id="public_ip">N/A</span></b></p>
               <p>LAN IP : <b><?php echo $local_addr; ?></b></p>
               <p>Host IP : <b><?php echo getHostByName( getHostName() ); ?></b></p>
               <p>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></p>
@@ -463,13 +484,6 @@ class Pi {
     }
     return "N/A";
   } // end of getLocalAddress()
-
-  public function getPublicAddress() {
-    $api_url = "https://api.ipify.org?format=json";
-    $data = @file_get_contents($api_url);
-    $obj = json_decode($data);
-    return @$obj->ip;
-  }
 
   public function getDirContents( $dir = __DIR__ ) {
     $directories = array();
