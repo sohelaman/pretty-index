@@ -159,8 +159,7 @@ $errors = $pi->errors;
                   echo base64_decode($eval_data);
                   break;
                 case 'serialize':
-                  print_r( serialize($eval_data) );
-                  print_r( '<br>ERROR: Work in progress!' );
+                  eval ( "echo serialize($eval_data);" );
                   break;
                 case 'unserialize':
                   // var_dump( unserialize($eval_data) );
@@ -450,8 +449,7 @@ class Pi {
           echo base64_decode($eval_data);
           break;
         case 'serialize':
-          print_r( serialize($eval_data) );
-          print_r( '<br>ERROR: Work in progress!' );
+          eval ( "echo serialize($eval_data);" );
           break;
         case 'unserialize':
           // var_dump( unserialize($eval_data) );
