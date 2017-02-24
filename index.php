@@ -144,13 +144,31 @@ $errors = $pi->errors;
         } else {
           // jQuery is not loaded
           <?php
-            if(isset($_POST['eval_code'])){
+            if( isset($_POST['eval_code']) && isset($_POST['modeSelect']) ){
             ?>
             document.getElementById('eval_output').style.display='block';
+            document.getElementById('mode_select').value="<?php echo $_POST['modeSelect']; ?>";
             <?php
               $eval_data = trim($_POST['eval_code']);
               ob_start();
-              eval($eval_data);
+              switch ($_POST['modeSelect']) {
+                case 'encode':
+                  echo base64_encode($eval_data);
+                  break;
+                case 'decode':
+                  echo base64_decode($eval_data);
+                  break;
+                case 'serialize':
+                  eval ( "echo serialize($eval_data);" );
+                  break;
+                case 'unserialize':
+                  // var_dump( unserialize($eval_data) );
+                  print_r( unserialize($eval_data) );
+                  break;
+                default:
+                  eval($eval_data);
+                  break;
+              }
               $eval_output = ob_get_contents();
               ob_end_clean();
             }
@@ -374,6 +392,13 @@ $errors = $pi->errors;
           <br/><button name="submit" type="submit" id="runBtnSubmit" onclick="codeValidate(event, 'eval_code');">Run</button>
           <button name="clearText" type="button" id="clearText" onclick="clearInputValue('eval_code');">Clear Text</button>
           <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
+          <select name="modeSelect" id="mode_select">
+            <option value="eval">Eval</option>
+            <option value="encode">Encode</option>
+            <option value="decode">Decode</option>
+            <option value="serialize">Serialize</option>
+            <option value="unserialize">Unserialize</option>
+          </select>
         </form>
       </div>
       <div id="eval_output" class="block eval_output">
@@ -412,10 +437,28 @@ class Pi {
       exit;
     } else if ( !empty($_REQUEST['delete']) ) {
       $this->deleteBookmark($_REQUEST['delete']);
-    } else if( !empty($_POST['eval_code']) and isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) ) {
+    } else if( !empty($_POST['eval_code']) and isset( $_SERVER['HTTP_X_REQUESTED_WITH'] ) and isset($_POST['modeSelect']) ) {
       $eval_data = trim($_POST['eval_code']);
+      $modeSelect = $_POST['modeSelect'];
       ob_start();
-      eval($eval_data);
+      switch ($modeSelect) {
+        case 'encode':
+          echo base64_encode($eval_data);
+          break;
+        case 'decode':
+          echo base64_decode($eval_data);
+          break;
+        case 'serialize':
+          eval ( "echo serialize($eval_data);" );
+          break;
+        case 'unserialize':
+          // var_dump( unserialize($eval_data) );
+          print_r( unserialize($eval_data) );
+          break;
+        default:
+          eval($eval_data);
+          break;
+      }
       $eval_output = ob_get_contents();
       ob_end_clean();
       echo $eval_output;
