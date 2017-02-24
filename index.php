@@ -393,9 +393,9 @@ $errors = $pi->errors;
           <button name="clearText" type="button" id="clearText" onclick="clearInputValue('eval_code');">Clear Text</button>
           <button name="resetText" type="button" id="resetText" onclick="reset_text()">Reset</button>
           <select name="modeSelect" id="mode_select">
-            <option value="eval">Eval</option>
-            <option value="encode">Encode</option>
-            <option value="decode">Decode</option>
+            <option value="eval">PHP Eval</option>
+            <option value="encode">Base64 Encode</option>
+            <option value="decode">Base64 Decode</option>
             <option value="serialize">Serialize</option>
             <option value="unserialize">Unserialize</option>
           </select>

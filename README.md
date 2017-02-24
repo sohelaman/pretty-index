@@ -9,6 +9,8 @@
 * Web search
 * Directory listing
 * Evaluate PHP code
+* Encode to and decode from base64 string
+* Serialize and unserialize object data
 * Custom bookmarks
   - This requires pdo-sqlite and write permission on script's directory.
   - Alternatively, if you do not want to use sqlite, then a writable json file named *pretty_index.json* in the script's directory will do. This json file is automatically created if the server has write permission on the directory.
