@@ -352,7 +352,7 @@ $errors = $pi->errors;
                     <li class="bookmarks"><a href="<?php echo $bookmark->url;?>" data-bookmark-id="<?php echo $bookmark->id;?>" target="_blank"><?php echo $bookmark->title;?></a></li>
                   <?php } ?>
                 <?php } else { ?>
-                  <li class="bookmarks bookmark-help">No bookmarks. Add bookmarks using the <b>+</b> button.</li>
+                  <li class="bookmark-help">No bookmarks. Add bookmarks using the <b>+</b> button.</li>
                 <?php } ?>
               </ul>
             </div>
