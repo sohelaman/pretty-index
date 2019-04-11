@@ -1,7 +1,7 @@
 <?php
 
 $pi = new Pi();
-$current_dir_url = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+$current_dir_url = rtrim("//" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/');
 list( $directories, $files ) = $pi->getDirContents();
 $local_addr = $pi->getLocalAddress();
 
@@ -57,6 +57,7 @@ function colStyleGen($prefix = "col") {
       text-align: center;
       text-decoration: none;
       display: inline-block;
+      cursor: pointer;
     }
     input[type=text], textarea {
       border: 1px solid darkslategray;
@@ -64,6 +65,22 @@ function colStyleGen($prefix = "col") {
       box-sizing: border-box;
     }
     select { padding: 4px; border: none; }
+    .spinner { display: inline; }
+    .spinner:after {
+      content: " ";
+      display: block;
+      width: 18px;
+      height: 18px;
+      margin: 1px;
+      border-radius: 50%;
+      border: 3px solid darkslategray;
+      border-color: darkslategray transparent darkslategray transparent;
+      animation: spinner 1.2s linear infinite;
+    }
+    @keyframes spinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
     /* For mobile phones: */
     [class*="col-"] { width: 100%; }
@@ -108,9 +125,11 @@ function colStyleGen($prefix = "col") {
     .current-dir:hover { background-color: whitesmoke; }
     .main textarea { width: 100%; }
     .main #search-query { min-width: 50%; }
+    .main #code-result { overflow-x: auto; }
     .error { color: red; }
     .warn { color: orange; }
     .main textarea, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
+    .spinner { display: none; float: right; }
 
   </style>
   </meta>
@@ -215,7 +234,7 @@ function colStyleGen($prefix = "col") {
         <div class="callout text-left">
           <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
           <select name="operation" id="operation">
-            <option value="eval">PHP Code</option>
+            <option value="eval">PHP</option>
             <option value="jsonlint">JSON Lint</option>
             <option value="base64encode">Base64 Encode</option>
             <option value="base64decode">Base64 Decode</option>
@@ -223,12 +242,13 @@ function colStyleGen($prefix = "col") {
             <option value="unserialize">Unserialize</option>
           </select>
           <button id="code-submit">Execute</button>
+          <div class="spinner" id="spinner"></div>
         </div>
       </div>
     </div>
     <div class="row hidden" id="code-result-wrapper">
       <div class="center">
-        <div class="callout text-left" id="code-result">Eval result</div>
+        <div class="callout text-left" id="code-result"></div>
       </div>
     </div>
 
@@ -284,15 +304,18 @@ function colStyleGen($prefix = "col") {
       code = typeof code === 'string' ? code.trim() : false;
       let op = document.getElementById('operation').value;
       if (!code || !op) return;
+      this.loaderSpinner();
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
-          let result = xhttp.status === 200 ? `${xhttp.responseText}` : '<em class="error">Error ' + xhttp.status + ' - ' + xhttp.statusText + '</em>';
-          document.getElementById('code-result').innerHTML = result ? result : '<em class="warn">[NULL]<em>';
+          let result = xhttp.status === 200 ? `${xhttp.responseText}` : '<em class="error">[Error ' + xhttp.status + ' - ' + xhttp.statusText + ']</em>';
+          document.getElementById('code-result').innerHTML = result ? '<pre>' + result + '</pre>' : '<em class="warn">[No output]<em>';
           document.getElementById('code-result-wrapper').style.display = 'block';
           document.getElementById('infobox-wrapper').style.display = 'none';
           document.getElementById('search-wrapper').style.display = 'none';
           document.getElementById('current-dir-wrapper').style.display = 'none';
+          document.getElementById('time-wrapper').style.display = 'none';
+          this.loaderSpinner(true);
         }
       };
       xhttp.open("POST", window.location.href, true);
@@ -303,6 +326,11 @@ function colStyleGen($prefix = "col") {
     showHide(elementID) {
       var elem = document.getElementById(elementID);
       elem.style.display = !elem.style.display || elem.style.display === 'none' ? 'block' : 'none';
+    }
+
+    loaderSpinner(hide) {
+      let disp = hide ? 'none' : 'inline';
+      document.getElementById('spinner').style.display = disp;
     }
 
     registerEvents() {
@@ -371,7 +399,7 @@ class Pi {
           break;
         case 'jsonlint':
           $data = json_decode($code);
-          $jout = json_last_error() === JSON_ERROR_NONE ? json_encode($data, JSON_PRETTY_PRINT) : '<em class="warn">Invalid JSON</em>';
+          $jout = json_last_error() === JSON_ERROR_NONE ? json_encode($data, JSON_PRETTY_PRINT) : '<em class="warn">[Invalid JSON]</em>';
           print $jout;
           break;
         default:
@@ -380,7 +408,7 @@ class Pi {
       }
       $output = ob_get_contents();
       ob_end_clean();
-      echo '<pre>' . $output . '</pre>';
+      echo $output;
       exit;
     }
   } // end of _handleRequests()
