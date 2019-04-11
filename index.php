@@ -2,7 +2,7 @@
 
 $pi = new Pi();
 $current_dir_url = rtrim("//" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/');
-list( $directories, $files ) = $pi->getDirContents();
+list($directories, $files) = $pi->getDirContents();
 $local_addr = $pi->getLocalAddress();
 
 function colStyleGen($prefix = "col") {
@@ -49,7 +49,7 @@ function colStyleGen($prefix = "col") {
       font-size: 12px;
       padding: 15px;
     }
-    button {
+    .btn {
       background-color: darkslategray;
       border: none;
       color: white;
@@ -114,6 +114,8 @@ function colStyleGen($prefix = "col") {
     .center { text-align: center; margin: 0 auto; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
+    .right { float: right; }
+    .left { float: left; }
     .pad-right { padding-right: 10px; }
     .pad-left { padding-left: 10px; }
     .pad { padding: 4px; }
@@ -129,7 +131,10 @@ function colStyleGen($prefix = "col") {
     .error { color: red; }
     .warn { color: orange; }
     .main textarea, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
-    .spinner { display: none; float: right; }
+    .spinner { display: none; }
+    .main a.bookmark { padding-right: 3px; }
+    .main .exterminate a.bookmark { color: red; }
+    .main .exterminate a.bookmark:hover { text-decoration: line-through; }
 
   </style>
   </meta>
@@ -181,26 +186,37 @@ function colStyleGen($prefix = "col") {
         <div class="callout">
           <div class="pad">
             <input type="text" id="search-query" maxlength="255" placeholder="Search" />
-            <button class="search-button" data-uri="https://www.google.com/search?q=">Google</button>
+            <button class="btn search-button" data-uri="https://www.google.com/search?q=">Google</button>
           </div>
           <div class="pad">
-            <button class="search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
-            <button class="search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
-            <button class="search-button" data-uri="https://github.com/search?q=">Github</button>
-            <button class="search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
-            <button class="search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
+            <button class="btn search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
+            <button class="btn search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
+            <button class="btn search-button" data-uri="https://github.com/search?q=">Github</button>
+            <button class="btn search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
+            <button class="btn search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
           </div>
         </div>
       </div>
     </div>
-    
-    <!-- <div class="row" id="bookmarks-wrapper">
+
+    <div class="row" id="bookmark-wrapper">
       <div class="center">
-        <div class="callout">
-          Bookmarks
+        <div class="callout text-left">
+          <button id="bookmark-add">&#43;</button>&nbsp;
+          <span class="right">&nbsp;<button id="bookmark-delete">&#215;</button></span>
+          <span id="bookmark-list"></span>
         </div>
       </div>
-    </div> -->
+    </div>
+    <div class="row" id="bookmark-detail-wrapper">
+      <div class="center">
+        <div class="callout">
+          <input type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
+          <input type="text" name="bookmark-url" id="bookmark-url" placeholder="URL" size="50">
+          <button class="btn" id="bookmark-save">Save</button>
+        </div>
+      </div>
+    </div>
 
     <div class="row" id="current-dir-wrapper">
       <div class="center">
@@ -241,8 +257,8 @@ function colStyleGen($prefix = "col") {
             <option value="serialize">Serialize</option>
             <option value="unserialize">Unserialize</option>
           </select>
-          <button id="code-submit">Execute</button>
-          <div class="spinner" id="spinner"></div>
+          <button class="btn" id="code-submit">Execute</button>
+          <div class="spinner right" id="spinner"></div>
         </div>
       </div>
     </div>
@@ -267,6 +283,7 @@ function colStyleGen($prefix = "col") {
 
     init() {
       this.registerEvents();
+      this.listBookmarks();
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
       }, error => { console.log(error); });
@@ -311,10 +328,7 @@ function colStyleGen($prefix = "col") {
           let result = xhttp.status === 200 ? `${xhttp.responseText}` : '<em class="error">[Error ' + xhttp.status + ' - ' + xhttp.statusText + ']</em>';
           document.getElementById('code-result').innerHTML = result ? '<pre>' + result + '</pre>' : '<em class="warn">[No output]<em>';
           document.getElementById('code-result-wrapper').style.display = 'block';
-          document.getElementById('infobox-wrapper').style.display = 'none';
-          document.getElementById('search-wrapper').style.display = 'none';
-          document.getElementById('current-dir-wrapper').style.display = 'none';
-          document.getElementById('time-wrapper').style.display = 'none';
+          this.hideOtherBoxes();
           this.loaderSpinner(true);
         }
       };
@@ -323,14 +337,63 @@ function colStyleGen($prefix = "col") {
       xhttp.send('code-box=' + code + '&operation=' + op);
     } // end of codeSubmit()
 
-    showHide(elementID) {
-      var elem = document.getElementById(elementID);
-      elem.style.display = !elem.style.display || elem.style.display === 'none' ? 'block' : 'none';
+    hideOtherBoxes() {
+      let boxes = ['infobox-wrapper', 'search-wrapper', 'current-dir-wrapper', 'time-wrapper', 'bookmark-wrapper', 'bookmark-detail-wrapper'];
+      boxes.forEach(v => { document.getElementById(v).classList.add('hidden'); });
     }
 
     loaderSpinner(hide) {
       let disp = hide ? 'none' : 'inline';
       document.getElementById('spinner').style.display = disp;
+    }
+
+    getBookmarks() {
+      if (!localStorage) return false;
+      let keys = Object.keys(localStorage);
+      let bms = [];
+      keys.forEach(v => {
+        if (v.includes('pi_bookmark-')) bms.push(JSON.parse(localStorage[v]));
+      });
+      return bms;
+    } // end of getBookmarks();
+
+    listBookmarks() {
+      let bms = this.getBookmarks();
+      document.getElementById('bookmark-list').innerHTML = '';
+      bms.forEach(v => {
+        let a = document.createElement('a');
+        a.innerHTML = v.name;
+        a.href = v.url;
+        a.classList.add('bookmark');
+        a.setAttribute('data-id', v.id);
+        a.setAttribute('target', '_blank');;
+        document.getElementById('bookmark-list').appendChild(a);
+      });
+    } // end of listBookmarks()
+
+    addBookmark() {
+      let index = localStorage.getItem('pi_bookmark_index');
+      index = index ? parseInt(index) : 0;
+      index++;
+      let name = document.getElementById('bookmark-name').value;
+      let url = document.getElementById('bookmark-url').value;
+      if (!name || !url || !name.trim() || !url.trim() || !this.isValidURL(url)) { alert('Silence is golden.'); return; }
+      let key = 'pi_bookmark-' + index;
+      let bm = { id: index, name: name.trim(), url: url.trim() };
+      localStorage.setItem(key, JSON.stringify(bm));
+      localStorage.setItem('pi_bookmark_index', index);
+    } // end of addBookmark()
+
+    deleteBookmark(index) {
+      let key = 'pi_bookmark-' + index;
+      localStorage.removeItem(key);
+      this.listBookmarks();
+    }
+
+    isValidURL(str) {
+      let a = document.createElement('a');
+      a.href = str;
+      return (a.host && a.hostname && a.protocol);
     }
 
     registerEvents() {
@@ -350,7 +413,7 @@ function colStyleGen($prefix = "col") {
       });
       document.getElementById('current-dir').addEventListener('click', e => {
         e.preventDefault();
-        this.showHide('dir-listing');
+        document.getElementById('dir-listing').classList.toggle('hidden');
       });
       document.getElementById('code-submit').addEventListener('click', e => {
         this.codeSubmit();
@@ -358,6 +421,26 @@ function colStyleGen($prefix = "col") {
       document.getElementById('code-box').addEventListener('keydown', e => {
         if (e.ctrlKey && e.keyCode === 13) this.codeSubmit();
       });
+      document.getElementById('bookmark-add').addEventListener('click', e => {
+        if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
+        document.getElementById('bookmark-detail-wrapper').classList.toggle('hidden');
+      });
+      document.getElementById('bookmark-save').addEventListener('click', e => {
+        if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
+        this.addBookmark();
+      });
+      document.getElementById('bookmark-delete').addEventListener('click', e => {
+        document.getElementById('bookmark-wrapper').classList.toggle('exterminate');
+      });
+      document.querySelectorAll('#bookmark-wrapper a.bookmark').forEach(v => {
+        v.addEventListener('click', e => {
+          if (document.getElementById('bookmark-wrapper').classList.contains('exterminate')) {
+            e.preventDefault();
+            this.deleteBookmark(e.target.getAttribute('data-id')); // TODO bind event.
+          }
+        });
+      });
+      
     } // end of registerEvents()
 
   } // end of class Pi
