@@ -97,7 +97,7 @@ $errors = $pi->errors;
         jstime('datetime');
         document.getElementById('eval_code').focus();
         document.getElementById('eval_output').style.display='none';
-        
+
         // Ajax load ip from ipfy.org
         ipfy('https://api.ipify.org?format=json').then( function( response ) {
           if(response) { document.getElementById('public_ip').innerHTML = JSON.parse(response).ip; }
@@ -285,13 +285,19 @@ $errors = $pi->errors;
           <?php } ?>
         </div>
       <?php } ?>
-      <div class="block center">
-        <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
-      </div>
-      <div id="info_wrapper">
-        <div class="block center">
+      <div class="col-12">
+        <div class="">
+          <div class="block center">
+            <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
+          </div>
+          <div class="block center">
           <h3 id="datetime"><?php echo date('l, F j, H:i:s'); ?></h3>
         </div>
+        </div>
+      </div>
+
+      <div id="info_wrapper">
+
         <div class="block center clearfix">
           <div class="col-12">
             <div class="col-6 first">
@@ -300,7 +306,7 @@ $errors = $pi->errors;
               <p>Host IP : <b><?php echo getHostByName( getHostName() ); ?></b></p>
               <p>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></p>
             </div>
-            <div class="col-6 last">
+            <div class="col-6">
               <p>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></p>
               <p>PHP Version : <b><?php echo phpversion(); ?> (<a href="javascript:phpi();">phpinfo</a>)</b></p>
               <p>PHP Loaded INI : <b><?php echo php_ini_loaded_file(); ?></b></p>
@@ -517,13 +523,13 @@ class Pi {
       } // endforeach
     } else if(strtoupper(PHP_OS) == 'LINUX') {
       $methods = array();
-      $interfaces = array_diff(explode(PHP_EOL, `ls -1 /sys/class/net`), ['', 'lo', 'docker0']);
+      $interfaces = array_diff(explode(PHP_EOL, `ls -1 /sys/class/net`), ['', 'lo', 'docker0', 'virbr0']);
       foreach( $interfaces as $interface ) {
-        $methods[] = function() { return exec("ifconfig $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
-        $methods[] = function() { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
+        // $methods[] = function() { return exec("ifconfig $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
+        // $methods[] = function() { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
       }
       $methods[] = function() { return `hostname -I | awk '{print $1}'`; };
-      $methods[] = function() { return `ip route get 1 | awk '{print $NF;exit}'`; };
+      // $methods[] = function() { return `ip route get 1 | awk '{print $NF;exit}'`; };
       foreach( $methods as $method ) {
         $ip = trim($method());
         if( filter_var($ip, FILTER_VALIDATE_IP) ) { return $ip; }
