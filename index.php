@@ -83,6 +83,14 @@ function colStyleGen($prefix = "col") {
       100% { transform: rotate(360deg); }
     }
 
+    .disappear {
+      animation: cssAnimDisappear 0s 3s forwards;
+      visibility: visible;
+    }
+    @keyframes cssAnimDisappear {
+      to { visibility: hidden; }
+    }
+
     /* For mobile phones: */
     [class*="col-"] { width: 100%; }
 
@@ -127,12 +135,12 @@ function colStyleGen($prefix = "col") {
     .callout { border: 1px solid black; margin: 4px; padding: 4px; }
     .spacer { height: 10px; }
     .current-dir:hover { background-color: whitesmoke; }
-    .main textarea { width: 100%; }
+    .main textarea#code-box { width: 100%; resize: vertical; }
+    .main textarea#code-box, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
     .main #search-query { min-width: 50%; }
     .main #code-result { overflow-x: auto; }
     .error { color: red; }
     .warn { color: orange; }
-    .main textarea, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
     .spinner { display: none; }
     .main .exterminate a.bookmark { color: red; }
     .main .exterminate a.bookmark:hover { text-decoration: line-through; }
@@ -266,6 +274,9 @@ function colStyleGen($prefix = "col") {
             <option value="unserialize">Unserialize</option>
           </select>
           <button class="btn" id="code-submit">Execute</button>
+          <button class="btn" id="copy-code">Copy</button>
+          <button class="btn hidden" id="copy-result">Copy Result</button>
+          <em class="pad hidden" id="code-msg"></em>
           <div class="spinner right" id="spinner"></div>
         </div>
       </div>
@@ -288,6 +299,10 @@ function colStyleGen($prefix = "col") {
 
 <script type="text/javascript">
   class Pi {
+    constructor() {
+      this._prefix = '_pretty_index__';
+      this.init();
+    }
 
     init() {
       this.registerEvents();
@@ -328,14 +343,15 @@ function colStyleGen($prefix = "col") {
       let code = document.getElementById('code-box').value;
       code = typeof code === 'string' ? code.trim() : false;
       let op = document.getElementById('operation').value;
-      if (!code || !op) return;
+      if (!code || !op) { this.showMsg('Execute Order 66'); return; }
       this.loaderSpinner();
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = () => {
         if (xhttp.readyState == 4) {
           let result = xhttp.status === 200 ? `${xhttp.responseText}` : '<em class="error">[Error ' + xhttp.status + ' - ' + xhttp.statusText + ']</em>';
           document.getElementById('code-result').innerHTML = result ? '<pre>' + result + '</pre>' : '<em class="warn">[No output]<em>';
-          document.getElementById('code-result-wrapper').style.display = 'block';
+          document.getElementById('code-result-wrapper').classList.remove('hidden');
+          document.getElementById('copy-result').classList.remove('hidden');
           this.hideOtherBoxes();
           this.loaderSpinner(true);
         }
@@ -344,6 +360,36 @@ function colStyleGen($prefix = "col") {
       xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       xhttp.send('code-box=' + code + '&operation=' + op);
     } // end of codeSubmit()
+
+    showMsg(msg) {
+      let codeMsg = document.getElementById('code-msg');
+      codeMsg.innerHTML = msg;
+      codeMsg.classList.remove('hidden');
+      setTimeout(() => { codeMsg.classList.add('hidden'); codeMsg.innerHTML = ''; }, 3000);
+    } // end of showMsg()
+
+    copyCode() {
+      let codeBox = document.getElementById('code-box');
+      if (!codeBox.value) { this.showMsg('Such empty!'); return; }
+      codeBox.select();
+      document.execCommand("copy");
+      this.showMsg('Code copied');
+    }
+
+    copyResult() {
+      let result = document.querySelector('#code-result pre');
+      if (!result || !result.textContent) { this.showMsg('Such empty!'); return; }
+      let str = result.textContent; // result.textContent or result.innerHTML
+      let resultCopyListener = e => {
+        e.clipboardData.setData("text/html", str);
+        e.clipboardData.setData("text/plain", str);
+        e.preventDefault();
+      };
+      document.addEventListener("copy", resultCopyListener);
+      document.execCommand("copy");
+      document.removeEventListener("copy", resultCopyListener);
+      this.showMsg('Result copied');
+    } // end of copyResult()
 
     hideOtherBoxes() {
       let boxes = ['infobox-wrapper', 'search-wrapper', 'current-dir-wrapper', 'time-wrapper', 'bookmark-wrapper', 'bookmark-detail-wrapper'];
@@ -360,7 +406,7 @@ function colStyleGen($prefix = "col") {
       let keys = Object.keys(localStorage);
       let bms = [];
       keys.forEach(v => {
-        if (v.includes('pi_bookmark-')) bms.push(JSON.parse(localStorage[v]));
+        if (v.includes(this._prefix + 'bookmark-')) bms.push(JSON.parse(localStorage[v]));
       });
       return bms;
     } // end of getBookmarks();
@@ -387,21 +433,21 @@ function colStyleGen($prefix = "col") {
         });
         document.getElementById('bookmark-list').appendChild(a);
       });
-      if (!list.firstChild) list.innerHTML = '<em>Such empty!</em>'
+      if (!list.firstChild) list.innerHTML = '<em>Silence is golden.</em>'
     } // end of listBookmarks()
 
     addBookmark() {
-      let index = localStorage.getItem('pi_bookmark_index');
+      let index = localStorage.getItem(this._prefix + 'bookmark_index');
       index = index ? parseInt(index) : 0;
       index++;
       let name = document.getElementById('bookmark-name');
       let url = document.getElementById('bookmark-url');
-      if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Silence is golden.'); return; }
+      if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Such empty!'); return; }
       if (!this.isValidURL(url.value)) { alert('Invalid URL.'); return; }
-      let key = 'pi_bookmark-' + index;
+      let key = this._prefix + 'bookmark-' + index;
       let bm = { id: index, name: name.value.trim(), url: url.value.trim() };
       localStorage.setItem(key, JSON.stringify(bm));
-      localStorage.setItem('pi_bookmark_index', index);
+      localStorage.setItem(this._prefix + 'bookmark_index', index);
       name.value = null;
       url.value = null;
       document.getElementById('bookmark-detail-wrapper').classList.add('hidden');
@@ -410,7 +456,7 @@ function colStyleGen($prefix = "col") {
 
     deleteBookmark(index) {
       if (!confirm('Delete bookmark?')) return;
-      let key = 'pi_bookmark-' + index;
+      let key = this._prefix + 'bookmark-' + index;
       localStorage.removeItem(key);
       this.listBookmarks();
     }
@@ -460,14 +506,20 @@ function colStyleGen($prefix = "col") {
       document.getElementById('bookmark-delete').addEventListener('click', e => {
         document.getElementById('bookmark-wrapper').classList.toggle('exterminate');
       });
+      document.getElementById('copy-code').addEventListener('click', e => {
+        this.copyCode();
+      });
+      document.getElementById('copy-result').addEventListener('click', e => {
+        this.copyResult();
+      });
     } // end of registerEvents()
 
   } // end of class Pi
-</script>
-<script type="text/javascript">
+
+  // let's have a pie
   let pi = new Pi();
-  pi.init();
 </script>
+
 </html>
 
 <?php
