@@ -38,7 +38,6 @@ function colStyleGen($prefix = "col") {
       background-color: purple;
       padding: 15px;
       color: white;
-      text-align: center;
       font-size: 14px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
     }
@@ -111,15 +110,11 @@ function colStyleGen($prefix = "col") {
     }
     @media only screen and (min-width: 768px) {
       /* For desktop: */
-      .center { width: 40%; }
-    }
-    @media only screen and (min-width: 960px) {
-      /* For desktop 2: */
-      .center { width: 50%; }
+      .center { width: 60%; }
     }
 
-    .main a { text-decoration: none; color: royalblue; }
-    .main a:hover { color: crimson; }
+    .content a { text-decoration: none; color: royalblue; }
+    .content a:hover { color: crimson; }
     .center { text-align: center; margin: 0 auto; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
@@ -135,15 +130,17 @@ function colStyleGen($prefix = "col") {
     .callout { border: 1px solid black; margin: 4px; padding: 4px; }
     .spacer { height: 10px; }
     .current-dir:hover { background-color: whitesmoke; }
-    .main textarea#code-box { width: 100%; resize: vertical; }
-    .main textarea#code-box, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
-    .main #search-query { min-width: 50%; }
-    .main #code-result { overflow-x: auto; }
+    .content textarea { width: 100%; resize: vertical; }
+    .content textarea#code-box, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
+    .content #search-query { min-width: 50%; }
+    .content #code-result, #todo-list { overflow-x: auto; }
     .error { color: red; }
     .warn { color: orange; }
     .spinner { display: none; }
-    .main .exterminate a.bookmark { color: red; }
-    .main .exterminate a.bookmark:hover { text-decoration: line-through; }
+    .content .exterminate a.bookmark { color: red; }
+    .content .exterminate a.bookmark:hover { text-decoration: line-through; }
+    .sidepane { padding-left: 0; }
+    .delete-todo { font-weight: bold; }
   </style>
   </meta>
 </head>
@@ -152,148 +149,167 @@ function colStyleGen($prefix = "col") {
 
   <div class="spacer"></div>
 
-  <div class="main">
-
-    <div class="row" id="host-wrapper">
-      <div class="center">
-        <div class="callout">
-          <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="row" id="time-wrapper">
-      <div class="center">
-        <div class="callout">
-          <h3 id="datetime"><?php echo date('l, F j, H:i:s'); ?></h3>
-        </div>
-      </div>
-    </div>
-
-    <div class="row" id="infobox-wrapper">
-      <div class="center">
-        <div class="row callout">
-          <div class="col-6 col-s-6 text-right">
-            <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
-            <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
-            <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
-            <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
-          </div>
-          <div class="col-6 col-s-6 text-left">
-            <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
-            <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
-            <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
-            <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
+  <div class="content center">
+    <div class="row">
+      
+      <div class="main col-9 col-s-12">
+        <div class="row" id="host-wrapper">
+          <div class="tenter">
+            <div class="callout">
+              <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="row" id="search-wrapper">
-      <div class="center">
+        <div class="row" id="time-wrapper">
+          <div class="tenter">
+            <div class="callout">
+              <h3 id="datetime"><?php echo date('l, F j, H:i:s'); ?></h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="infobox-wrapper">
+          <div class="tenter">
+            <div class="row callout">
+              <div class="col-6 col-s-6 text-right">
+                <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
+                <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
+                <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
+                <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
+              </div>
+              <div class="col-6 col-s-6 text-left">
+                <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
+                <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
+                <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
+                <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="search-wrapper">
+          <div class="tenter">
+            <div class="callout">
+              <div class="pad">
+                <input type="text" id="search-query" maxlength="255" placeholder="Search" />
+                <button class="btn search-button" data-uri="https://www.google.com/search?q=">Google</button>
+              </div>
+              <div class="pad">
+                <button class="btn search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
+                <button class="btn search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
+                <button class="btn search-button" data-uri="https://github.com/search?q=">Github</button>
+                <button class="btn search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
+                <button class="btn search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="bookmark-wrapper">
+          <div class="tenter">
+            <div class="callout text-left">
+              <button id="bookmark-add">&#43;</button>&nbsp;
+              <span class="right">&nbsp;<button id="bookmark-delete">&#215;</button></span>
+              <span id="bookmark-list"></span>
+            </div>
+          </div>
+        </div>
+        <div class="row hidden" id="bookmark-detail-wrapper">
+          <div class="tenter">
+            <div class="callout">
+              <div class="row">
+                <div class="col-3 col-s-3">
+                  <input class="wide" type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
+                </div>
+                <div class="col-7 col-s-7">
+                  <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="URL">
+                </div>
+                <div class="col-2 col-s-2">
+                  <button class="btn" id="bookmark-save">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" id="current-dir-wrapper">
+          <div class="tenter">
+            <div class="callout current-dir">
+              <a href="#" id="current-dir"><div><strong><?php echo __DIR__; ?></strong></div></a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row hidden" id="dir-listing">
+          <div class="tenter">
+            <div class="row callout">
+              <div class="col-6 col-s-6 text-left">
+                <div>Directories</div><hr>
+                <?php foreach ($directories as $folder) {
+                  echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
+                } ?>
+              </div>
+              <div class="col-6 col-s-6 text-right">
+                <div>Files</div><hr>
+                <?php foreach ($files as $file) {
+                  echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
+                } ?>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="tenter">
+            <div class="callout text-left">
+              <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
+              <select name="operation" id="operation">
+                <option value="eval">PHP</option>
+                <option value="jsonlint">JSON Lint</option>
+                <option value="base64encode">Base64 Encode</option>
+                <option value="base64decode">Base64 Decode</option>
+                <option value="serialize">Serialize</option>
+                <option value="unserialize">Unserialize</option>
+              </select>
+              <button class="btn" id="code-submit">Execute</button>
+              <button class="btn" id="copy-code">Copy</button>
+              <button class="btn hidden" id="copy-result">Copy Result</button>
+              <em class="pad hidden" id="code-msg"></em>
+              <div class="spinner right" id="spinner"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row hidden" id="code-result-wrapper">
+          <div class="tenter">
+            <div class="callout text-left" id="code-result"></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="tenter">
+            <div class="blurry text-right pad-right"><em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em></div>
+          </div>
+        </div>
+      </div><!-- main -->
+      
+      <div class="sidepane col-3 col-s-12 text-left">
         <div class="callout">
           <div class="pad">
-            <input type="text" id="search-query" maxlength="255" placeholder="Search" />
-            <button class="btn search-button" data-uri="https://www.google.com/search?q=">Google</button>
-          </div>
-          <div class="pad">
-            <button class="btn search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
-            <button class="btn search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
-            <button class="btn search-button" data-uri="https://github.com/search?q=">Github</button>
-            <button class="btn search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
-            <button class="btn search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
+            <span class="pad-right">Todos</span>
+            <!-- <span><button>+</button></span> -->
+            <div class="spacer"></div>
+            <textarea id="todo-box" placeholder="What to do?"></textarea>
+            <div id="todo-list"></div>
           </div>
         </div>
-      </div>
-    </div>
+      </div><!-- sidepane -->
 
-    <div class="row" id="bookmark-wrapper">
-      <div class="center">
-        <div class="callout text-left">
-          <button id="bookmark-add">&#43;</button>&nbsp;
-          <span class="right">&nbsp;<button id="bookmark-delete">&#215;</button></span>
-          <span id="bookmark-list"></span>
-        </div>
-      </div>
-    </div>
-    <div class="row hidden" id="bookmark-detail-wrapper">
-      <div class="center">
-        <div class="callout">
-          <div class="row">
-            <div class="col-3 col-s-3">
-              <input class="wide" type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
-            </div>
-            <div class="col-7 col-s-7">
-              <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="URL">
-            </div>
-            <div class="col-2 col-s-2">
-              <button class="btn" id="bookmark-save">Save</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row" id="current-dir-wrapper">
-      <div class="center">
-        <div class="callout current-dir">
-          <a href="#" id="current-dir"><div><strong><?php echo __DIR__; ?></strong></div></a>
-        </div>
-      </div>
-    </div>
+    </div><!-- row -->
     
-    <div class="row hidden" id="dir-listing">
-      <div class="center">
-        <div class="row callout">
-          <div class="col-6 col-s-6 text-left">
-            <div>Directories</div><hr>
-            <?php foreach ($directories as $folder) {
-              echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
-            } ?>
-          </div>
-          <div class="col-6 col-s-6 text-right">
-            <div>Files</div><hr>
-            <?php foreach ($files as $file) {
-              echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
-            } ?>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="row">
-      <div class="center">
-        <div class="callout text-left">
-          <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
-          <select name="operation" id="operation">
-            <option value="eval">PHP</option>
-            <option value="jsonlint">JSON Lint</option>
-            <option value="base64encode">Base64 Encode</option>
-            <option value="base64decode">Base64 Decode</option>
-            <option value="serialize">Serialize</option>
-            <option value="unserialize">Unserialize</option>
-          </select>
-          <button class="btn" id="code-submit">Execute</button>
-          <button class="btn" id="copy-code">Copy</button>
-          <button class="btn hidden" id="copy-result">Copy Result</button>
-          <em class="pad hidden" id="code-msg"></em>
-          <div class="spinner right" id="spinner"></div>
-        </div>
-      </div>
-    </div>
-    <div class="row hidden" id="code-result-wrapper">
-      <div class="center">
-        <div class="callout text-left" id="code-result"></div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="center">
-        <div class="blurry text-right pad-right"><em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em></div>
-      </div>
-    </div>
-    
-  </div><!-- main -->
+  </div><!-- content -->
+  
 
 </body>
 
@@ -307,6 +323,7 @@ function colStyleGen($prefix = "col") {
     init() {
       this.registerEvents();
       this.listBookmarks();
+      this.listTodos();
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
       }, error => { console.log(error); });
@@ -401,18 +418,18 @@ function colStyleGen($prefix = "col") {
       document.getElementById('spinner').style.display = disp;
     }
 
-    getBookmarks() {
+    getItems(type) {
       if (!localStorage) return false;
+      let items = [], keyPrefix = type === 'todo' ? this._prefix + 'todo-' : this._prefix + 'bookmark-';
       let keys = Object.keys(localStorage);
-      let bms = [];
       keys.forEach(v => {
-        if (v.includes(this._prefix + 'bookmark-')) bms.push(JSON.parse(localStorage[v]));
+        if (v.includes(keyPrefix)) items.push(JSON.parse(localStorage[v]));
       });
-      return bms;
-    } // end of getBookmarks();
+      return items;
+    } // end of getItems();
 
     listBookmarks() {
-      let bms = this.getBookmarks();
+      let bms = this.getItems('bookmark');
       let list = document.getElementById('bookmark-list');
       while (list.firstChild) {
         list.removeChild(list.firstChild);
@@ -431,9 +448,9 @@ function colStyleGen($prefix = "col") {
             this.deleteBookmark(e.target.getAttribute('data-id'));
           }
         });
-        document.getElementById('bookmark-list').appendChild(a);
+        list.appendChild(a);
       });
-      if (!list.firstChild) list.innerHTML = '<em>Silence is golden.</em>'
+      if (!list.firstChild) list.innerHTML = '<em>Silence is golden.</em>';
     } // end of listBookmarks()
 
     addBookmark() {
@@ -469,6 +486,56 @@ function colStyleGen($prefix = "col") {
         return false;  
       }
     }
+
+    listTodos() {
+      let todos = this.getItems('todo');
+      let list = document.getElementById('todo-list');
+      while (list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
+      if (todos.length > 0) list.appendChild(document.createElement('hr'));
+      todos.forEach(v => {
+        let del = document.createElement('a');
+        del.innerHTML = '&#215;';
+        del.href = '#';
+        del.classList.add('delete-todo');
+        del.setAttribute('data-id', v.id);
+        del.addEventListener('click', e => {
+          e.preventDefault();
+          this.deleteTodo(e.target.getAttribute('data-id'));
+        });
+        list.appendChild(del);
+        let elm = document.createElement('span');
+        elm.innerHTML = v.body;
+        elm.classList.add('todo');
+        elm.classList.add('pad');
+        elm.setAttribute('data-id', v.id);
+        list.appendChild(elm);
+        list.appendChild(document.createElement('hr'));
+      });
+      // if (!list.firstChild) list.innerHTML = '<em>Silence is golden.</em>';
+    } // end of listTodos()
+
+    addTodo() {
+      let index = localStorage.getItem(this._prefix + 'todo_index');
+      index = index ? parseInt(index) : 0;
+      index++;
+      let body = document.getElementById('todo-box');
+      if (!body.value || !body.value.trim()) { alert('Such empty!'); return; }
+      let key = this._prefix + 'todo-' + index;
+      let todo = { id: index, body: body.value.trim() };
+      localStorage.setItem(key, JSON.stringify(todo));
+      localStorage.setItem(this._prefix + 'todo_index', index);
+      body.value = null;
+      this.listTodos();
+    } // end of addTodo()
+
+    deleteTodo(index) {
+      if (!confirm('Delete todo?')) return;
+      let key = this._prefix + 'todo-' + index;
+      localStorage.removeItem(key);
+      this.listTodos();
+    } // end of deleteTodo()
 
     registerEvents() {
       document.getElementById('phpinfo').addEventListener('click', e => {
@@ -511,6 +578,9 @@ function colStyleGen($prefix = "col") {
       });
       document.getElementById('copy-result').addEventListener('click', e => {
         this.copyResult();
+      });
+      document.getElementById('todo-box').addEventListener('keydown', e => {
+        if (e.ctrlKey && e.keyCode === 13) this.addTodo();
       });
     } // end of registerEvents()
 
