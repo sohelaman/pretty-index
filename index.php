@@ -54,6 +54,7 @@ function colStyleGen($prefix = "col") {
       border: none;
       color: white;
       padding: 5px;
+      margin: 3px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
@@ -119,6 +120,7 @@ function colStyleGen($prefix = "col") {
     .pad-right { padding-right: 10px; }
     .pad-left { padding-left: 10px; }
     .pad { padding: 4px; }
+    .wide { width: 100%; }
     .hidden { display: none; }
     .dark-matter { visibility: hidden; }
     .blurry { opacity: 0.4; }
@@ -132,10 +134,8 @@ function colStyleGen($prefix = "col") {
     .warn { color: orange; }
     .main textarea, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
     .spinner { display: none; }
-    .main a.bookmark { padding-right: 3px; }
     .main .exterminate a.bookmark { color: red; }
     .main .exterminate a.bookmark:hover { text-decoration: line-through; }
-
   </style>
   </meta>
 </head>
@@ -208,12 +208,20 @@ function colStyleGen($prefix = "col") {
         </div>
       </div>
     </div>
-    <div class="row" id="bookmark-detail-wrapper">
+    <div class="row hidden" id="bookmark-detail-wrapper">
       <div class="center">
         <div class="callout">
-          <input type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
-          <input type="text" name="bookmark-url" id="bookmark-url" placeholder="URL" size="50">
-          <button class="btn" id="bookmark-save">Save</button>
+          <div class="row">
+            <div class="col-3 col-s-3">
+              <input class="wide" type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
+            </div>
+            <div class="col-7 col-s-7">
+              <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="URL">
+            </div>
+            <div class="col-2 col-s-2">
+              <button class="btn" id="bookmark-save">Save</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -359,41 +367,61 @@ function colStyleGen($prefix = "col") {
 
     listBookmarks() {
       let bms = this.getBookmarks();
-      document.getElementById('bookmark-list').innerHTML = '';
+      let list = document.getElementById('bookmark-list');
+      while (list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
       bms.forEach(v => {
         let a = document.createElement('a');
         a.innerHTML = v.name;
         a.href = v.url;
         a.classList.add('bookmark');
+        a.classList.add('pad-right');
         a.setAttribute('data-id', v.id);
-        a.setAttribute('target', '_blank');;
+        a.setAttribute('target', '_blank');
+        a.addEventListener('click', e => {
+          if (document.getElementById('bookmark-wrapper').classList.contains('exterminate')) {
+            e.preventDefault();
+            this.deleteBookmark(e.target.getAttribute('data-id'));
+          }
+        });
         document.getElementById('bookmark-list').appendChild(a);
       });
+      if (!list.firstChild) list.innerHTML = '<em>Such empty!</em>'
     } // end of listBookmarks()
 
     addBookmark() {
       let index = localStorage.getItem('pi_bookmark_index');
       index = index ? parseInt(index) : 0;
       index++;
-      let name = document.getElementById('bookmark-name').value;
-      let url = document.getElementById('bookmark-url').value;
-      if (!name || !url || !name.trim() || !url.trim() || !this.isValidURL(url)) { alert('Silence is golden.'); return; }
+      let name = document.getElementById('bookmark-name');
+      let url = document.getElementById('bookmark-url');
+      if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Silence is golden.'); return; }
+      if (!this.isValidURL(url.value)) { alert('Invalid URL.'); return; }
       let key = 'pi_bookmark-' + index;
-      let bm = { id: index, name: name.trim(), url: url.trim() };
+      let bm = { id: index, name: name.value.trim(), url: url.value.trim() };
       localStorage.setItem(key, JSON.stringify(bm));
       localStorage.setItem('pi_bookmark_index', index);
+      name.value = null;
+      url.value = null;
+      document.getElementById('bookmark-detail-wrapper').classList.add('hidden');
+      this.listBookmarks();
     } // end of addBookmark()
 
     deleteBookmark(index) {
+      if (!confirm('Delete bookmark?')) return;
       let key = 'pi_bookmark-' + index;
       localStorage.removeItem(key);
       this.listBookmarks();
     }
 
     isValidURL(str) {
-      let a = document.createElement('a');
-      a.href = str;
-      return (a.host && a.hostname && a.protocol);
+      try {
+        new URL(str);
+        return true;
+      } catch (_) {
+        return false;  
+      }
     }
 
     registerEvents() {
@@ -432,15 +460,6 @@ function colStyleGen($prefix = "col") {
       document.getElementById('bookmark-delete').addEventListener('click', e => {
         document.getElementById('bookmark-wrapper').classList.toggle('exterminate');
       });
-      document.querySelectorAll('#bookmark-wrapper a.bookmark').forEach(v => {
-        v.addEventListener('click', e => {
-          if (document.getElementById('bookmark-wrapper').classList.contains('exterminate')) {
-            e.preventDefault();
-            this.deleteBookmark(e.target.getAttribute('data-id')); // TODO bind event.
-          }
-        });
-      });
-      
     } // end of registerEvents()
 
   } // end of class Pi
