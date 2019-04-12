@@ -139,7 +139,7 @@ function colStyleGen($prefix = "col") {
     .spinner { display: none; }
     .content .exterminate a.bookmark { color: red; }
     .content .exterminate a.bookmark:hover { text-decoration: line-through; }
-    .sidepane { padding-left: 0; }
+    /*.sidepane { padding-left: 0; }*/
     .delete-todo { font-weight: bold; }
   </style>
   </meta>
@@ -296,8 +296,7 @@ function colStyleGen($prefix = "col") {
       <div class="sidepane col-3 col-s-12 text-left">
         <div class="callout">
           <div class="pad">
-            <span class="pad-right">Todos</span>
-            <!-- <span><button>+</button></span> -->
+            <div><strong>Todos</strong></div>
             <div class="spacer"></div>
             <textarea id="todo-box" placeholder="What to do?"></textarea>
             <div id="todo-list"></div>
@@ -500,6 +499,7 @@ function colStyleGen($prefix = "col") {
         del.href = '#';
         del.classList.add('delete-todo');
         del.setAttribute('data-id', v.id);
+        del.setAttribute('title', 'Delete');
         del.addEventListener('click', e => {
           e.preventDefault();
           this.deleteTodo(e.target.getAttribute('data-id'));

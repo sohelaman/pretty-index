@@ -13,5 +13,6 @@
 * Serialize and unserialize data
 * Lint JSON
 * Bookmarks
+* Todos
 
 **Note: This index.php is ONLY for development purpose. DO NOT put this in your production server.**
