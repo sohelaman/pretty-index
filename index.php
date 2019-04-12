@@ -151,148 +151,126 @@ function colStyleGen($prefix = "col") {
 
   <div class="content center">
     <div class="row">
-      
+
       <div class="main col-9 col-s-12">
         <div class="row" id="host-wrapper">
-          <div class="tenter">
-            <div class="callout">
-              <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
-            </div>
+          <div class="callout">
+            <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
           </div>
         </div>
 
         <div class="row" id="time-wrapper">
-          <div class="tenter">
-            <div class="callout">
-              <h3 id="datetime"><?php echo date('l, F j, H:i:s'); ?></h3>
-            </div>
+          <div class="callout">
+            <h3 id="datetime"><?php echo date('l, F j, H:i:s'); ?></h3>
           </div>
         </div>
 
         <div class="row" id="infobox-wrapper">
-          <div class="tenter">
-            <div class="row callout">
-              <div class="col-6 col-s-6 text-right">
-                <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
-                <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
-                <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
-                <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
-              </div>
-              <div class="col-6 col-s-6 text-left">
-                <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
-                <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
-                <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
-                <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
-              </div>
+          <div class="row callout">
+            <div class="col-6 col-s-6 text-right">
+              <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
+              <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
+              <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
+              <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
+            </div>
+            <div class="col-6 col-s-6 text-left">
+              <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
+              <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
+              <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
+              <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
             </div>
           </div>
         </div>
 
         <div class="row" id="search-wrapper">
-          <div class="tenter">
-            <div class="callout">
-              <div class="pad">
-                <input type="text" id="search-query" maxlength="255" placeholder="Search" />
-                <button class="btn search-button" data-uri="https://www.google.com/search?q=">Google</button>
-              </div>
-              <div class="pad">
-                <button class="btn search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
-                <button class="btn search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
-                <button class="btn search-button" data-uri="https://github.com/search?q=">Github</button>
-                <button class="btn search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
-                <button class="btn search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
-              </div>
+          <div class="callout">
+            <div class="pad">
+              <input type="text" id="search-query" maxlength="255" placeholder="Search" />
+              <button class="btn search-button" data-uri="https://www.google.com/search?q=">Google</button>
+            </div>
+            <div class="pad">
+              <button class="btn search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
+              <button class="btn search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
+              <button class="btn search-button" data-uri="https://github.com/search?q=">Github</button>
+              <button class="btn search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
+              <button class="btn search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
             </div>
           </div>
         </div>
 
         <div class="row" id="bookmark-wrapper">
-          <div class="tenter">
-            <div class="callout text-left">
-              <button id="bookmark-add">&#43;</button>&nbsp;
-              <span class="right">&nbsp;<button id="bookmark-delete">&#215;</button></span>
-              <span id="bookmark-list"></span>
-            </div>
+          <div class="callout text-left">
+            <button id="bookmark-add">&#43;</button>&nbsp;
+            <span class="right">&nbsp;<button id="bookmark-delete">&#215;</button></span>
+            <span id="bookmark-list"></span>
           </div>
         </div>
         <div class="row hidden" id="bookmark-detail-wrapper">
-          <div class="tenter">
-            <div class="callout">
-              <div class="row">
-                <div class="col-3 col-s-3">
-                  <input class="wide" type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
-                </div>
-                <div class="col-7 col-s-7">
-                  <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="URL">
-                </div>
-                <div class="col-2 col-s-2">
-                  <button class="btn" id="bookmark-save">Save</button>
-                </div>
+          <div class="callout">
+            <div class="row">
+              <div class="col-3 col-s-3">
+                <input class="wide" type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
+              </div>
+              <div class="col-7 col-s-7">
+                <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="URL">
+              </div>
+              <div class="col-2 col-s-2">
+                <button class="btn" id="bookmark-save">Save</button>
               </div>
             </div>
           </div>
         </div>
 
         <div class="row" id="current-dir-wrapper">
-          <div class="tenter">
-            <div class="callout current-dir">
-              <a href="#" id="current-dir"><div><strong><?php echo __DIR__; ?></strong></div></a>
-            </div>
+          <div class="callout current-dir">
+            <a href="#" id="current-dir"><div><strong><?php echo __DIR__; ?></strong></div></a>
           </div>
         </div>
-        
+
         <div class="row hidden" id="dir-listing">
-          <div class="tenter">
-            <div class="row callout">
-              <div class="col-6 col-s-6 text-left">
-                <div>Directories</div><hr>
-                <?php foreach ($directories as $folder) {
-                  echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
-                } ?>
-              </div>
-              <div class="col-6 col-s-6 text-right">
-                <div>Files</div><hr>
-                <?php foreach ($files as $file) {
-                  echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
-                } ?>
-              </div>
+          <div class="row callout">
+            <div class="col-6 col-s-6 text-left">
+              <div>Directories</div><hr>
+              <?php foreach ($directories as $folder) {
+                echo '<b><a href="' . $current_dir_url . '/' . $folder . '">' . $folder . '</a></b><br/>';
+              } ?>
+            </div>
+            <div class="col-6 col-s-6 text-right">
+              <div>Files</div><hr>
+              <?php foreach ($files as $file) {
+                echo '<i><a href="' . $current_dir_url . '/' . $file . '">' . $file . '</a></i><br/>';
+              } ?>
             </div>
           </div>
         </div>
 
         <div class="row">
-          <div class="tenter">
-            <div class="callout text-left">
-              <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
-              <select name="operation" id="operation">
-                <option value="eval">PHP</option>
-                <option value="jsonlint">JSON Lint</option>
-                <option value="base64encode">Base64 Encode</option>
-                <option value="base64decode">Base64 Decode</option>
-                <option value="serialize">Serialize</option>
-                <option value="unserialize">Unserialize</option>
-              </select>
-              <button class="btn" id="code-submit">Execute</button>
-              <button class="btn" id="copy-code">Copy</button>
-              <button class="btn hidden" id="copy-result">Copy Result</button>
-              <em class="pad hidden" id="code-msg"></em>
-              <div class="spinner right" id="spinner"></div>
-            </div>
+          <div class="callout text-left">
+            <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
+            <select name="operation" id="operation">
+              <option value="eval">PHP</option>
+              <option value="jsonlint">JSON Lint</option>
+              <option value="base64encode">Base64 Encode</option>
+              <option value="base64decode">Base64 Decode</option>
+              <option value="serialize">Serialize</option>
+              <option value="unserialize">Unserialize</option>
+            </select>
+            <button class="btn" id="code-submit">Execute</button>
+            <button class="btn" id="copy-code">Copy</button>
+            <button class="btn hidden" id="copy-result">Copy Result</button>
+            <em class="pad hidden" id="code-msg"></em>
+            <div class="spinner right" id="spinner"></div>
           </div>
         </div>
         <div class="row hidden" id="code-result-wrapper">
-          <div class="tenter">
-            <div class="callout text-left" id="code-result"></div>
-          </div>
+          <div class="callout text-left" id="code-result"></div>
         </div>
 
         <div class="row">
-          <div class="tenter">
-            <div class="blurry text-right pad-right"><em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em></div>
-          </div>
+          <div class="blurry text-right pad-right"><em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em></div>
         </div>
       </div><!-- main -->
-      
+
       <div class="sidepane col-3 col-s-12 text-left">
         <div class="callout">
           <div class="pad">
@@ -305,7 +283,6 @@ function colStyleGen($prefix = "col") {
       </div><!-- sidepane -->
 
     </div><!-- row -->
-    
 
   </div><!-- content -->
   
