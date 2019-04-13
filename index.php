@@ -19,6 +19,7 @@ function colStyleGen($prefix = "col") {
 <head>
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Pretty Index</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" />
   <style type="text/css">
     * { box-sizing: border-box; }
     html { font-family: "Lato", sans-serif; }
@@ -226,7 +227,7 @@ function colStyleGen($prefix = "col") {
                 <input class="wide" type="text" name="bookmark-name" id="bookmark-name" placeholder="Name">
               </div>
               <div class="col-7 col-s-7">
-                <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="URL">
+                <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="Real URL">
               </div>
               <div class="col-2 col-s-2">
                 <button class="btn" id="bookmark-save">Save</button>
@@ -451,8 +452,8 @@ function colStyleGen($prefix = "col") {
       index++;
       let name = document.getElementById('bookmark-name');
       let url = document.getElementById('bookmark-url');
-      if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Such empty!'); return; }
-      if (!this.isValidURL(url.value)) { alert('Invalid URL.'); return; }
+      if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Something is missing! Mhmm, your intelligence.'); return; }
+      if (!this.isValidURL(url.value)) { alert("I said the 'real' URL."); return; }
       let key = this._prefix + 'bookmark-' + index;
       let bm = { id: index, name: name.value.trim(), url: url.value.trim() };
       localStorage.setItem(key, JSON.stringify(bm));
@@ -510,11 +511,12 @@ function colStyleGen($prefix = "col") {
     } // end of listTodos()
 
     addTodo() {
+      if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
       let index = localStorage.getItem(this._prefix + 'todo_index');
       index = index ? parseInt(index) : 0;
       index++;
       let body = document.getElementById('todo-box');
-      if (!body.value || !body.value.trim()) { alert('Such empty!'); return; }
+      if (!body.value || !body.value.trim()) { window.location.href = 'https://en.wikipedia.org/wiki/Nothing'; return; }
       let key = this._prefix + 'todo-' + index;
       let todo = { id: index, body: body.value.trim() };
       localStorage.setItem(key, JSON.stringify(todo));
