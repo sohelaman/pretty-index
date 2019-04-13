@@ -578,10 +578,10 @@ class Pi {
   }
 
   private function _handleRequests() {
-    if ( !empty($_REQUEST['phpinfo']) && $_REQUEST['phpinfo'] == 1 ) {
+    if (!empty($_REQUEST['phpinfo']) && $_REQUEST['phpinfo'] == 1) {
       phpinfo();
       exit;
-    } else if( !empty($_POST['code-box']) && isset($_POST['operation']) ) {
+    } else if(!empty($_POST['code-box']) && isset($_POST['operation'])) {
       $code = trim($_POST['code-box']);
       $operation = $_POST['operation'];
       ob_start();
@@ -619,42 +619,38 @@ class Pi {
       exec("ipconfig /all", $output);
       foreach($output as $line) {
         if(preg_match("/(.*)IPv4 Address(.*)/", $line)) {
-          if( preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match) ) {
-            if( filter_var($match[0], FILTER_VALIDATE_IP) ) { return trim($match[0]); }
+          if(preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match)) {
+            if(filter_var($match[0], FILTER_VALIDATE_IP)) { return trim($match[0]); }
           }
         }
       } // endforeach
     } else if(strtoupper(PHP_OS) == 'LINUX') {
       $methods = array();
       $interfaces = array_diff(explode(PHP_EOL, `ls -1 /sys/class/net`), ['', 'lo', 'docker0', 'virbr0']);
-      foreach( $interfaces as $interface ) {
-        // $methods[] = function() { return exec("ifconfig $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
-        // $methods[] = function() { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
-      }
       $methods[] = function() { return `hostname -I | awk '{print $1}'`; };
-      // $methods[] = function() { return `ip route get 1 | awk '{print $NF;exit}'`; };
-      foreach( $methods as $method ) {
+      foreach($interfaces as $interface) {
+        $methods[] = function() { return exec("ip a $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
+        $methods[] = function() { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
+      }
+      foreach($methods as $method) {
         $ip = trim($method());
-        if( filter_var($ip, FILTER_VALIDATE_IP) ) { return $ip; }
+        if(filter_var($ip, FILTER_VALIDATE_IP)) { return $ip; }
       } // endforeach
     }
     return "N/A";
   } // end of getLocalAddress()
 
-  public function getDirContents( $dir = __DIR__ ) {
+  public function getDirContents($dir = __DIR__) {
     $directories = array();
     $files_list  = array();
     $files = scandir($dir);
     foreach($files as $file) {
        if(($file != '.') && ($file != '..')) {
-          if(is_dir($dir . '/' . $file)) {
-            $directories[] = $file;
-          } else {
-            $files_list[] = $file;
-          }
+          if (is_dir($dir . '/' . $file)) $directories[] = $file;
+          else $files_list[] = $file;
        }
     }
-    return array( $directories, $files_list );
+    return array($directories, $files_list);
   } // end of getDirContents()
 
 } // end of class Pi
