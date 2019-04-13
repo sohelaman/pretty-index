@@ -64,6 +64,8 @@ function colStyleGen($prefix = "col") {
       border: 1px solid darkslategray;
       padding: 4px;
       box-sizing: border-box;
+      color: inherit;
+      background-color: inherit;
     }
     select { padding: 4px; border: none; }
     .spinner { display: inline; }
