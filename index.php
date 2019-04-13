@@ -141,6 +141,8 @@ function colStyleGen($prefix = "col") {
     .content .exterminate a.bookmark:hover { text-decoration: line-through; }
     /*.sidepane { padding-left: 0; }*/
     .delete-todo { font-weight: bold; }
+    .content h3, .content h1 { margin: 14px; }
+    .infobox { padding: 2px 10px; }
   </style>
   </meta>
 </head>
@@ -167,18 +169,30 @@ function colStyleGen($prefix = "col") {
 
         <div class="row" id="infobox-wrapper">
           <div class="row callout">
-            <div class="col-6 col-s-6 text-right">
-              <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
-              <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
-              <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
-              <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
+            <div class="row">
+              <div class="col-6 col-s-6 infobox text-right">
+                <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
+                <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
+                <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
+                <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
+              </div>
+              <div class="col-6 col-s-6 infobox text-left">
+                <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
+                <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
+                <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
+                <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
+              </div>
+              <div class="row"><a href="#" id="more-info">&#128899;</a></div>
             </div>
-            <div class="col-6 col-s-6 text-left">
-              <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
-              <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
-              <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
-              <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
-            </div>
+          </div>
+        </div>
+        <div class="row hidden" id="infobox-more">
+          <div class="row callout">
+            <?php $mem = $pi->getDetails('mem'); if ($mem): ?><div class="pad"><b>Memory:</b> <em><?php print $mem; ?></em></div><?php endif; ?>
+            <?php $disk = $pi->getDetails('disk'); if ($disk): ?><div class="pad"><b>Root Filesystem:</b> <em><?php print $disk; ?></em></div><?php endif; ?>
+            <?php $who = $pi->getDetails('who'); if ($who): ?><div class="pad"><b>User:</b> <em><?php print $who; ?></em></div><?php endif; ?>
+            <?php $sys = $pi->getDetails('sys'); if ($disk): ?><div class="pad"><b>System:</b> <em><?php print $sys; ?></em></div><?php endif; ?>
+            <div class="pad"><b>UA:</b> <em id="user-agent"><?php print $pi->getDetails('ua'); ?></em></div>
           </div>
         </div>
 
@@ -200,8 +214,8 @@ function colStyleGen($prefix = "col") {
 
         <div class="row" id="bookmark-wrapper">
           <div class="callout text-left">
-            <button id="bookmark-add">&#43;</button>&nbsp;
-            <span class="right">&nbsp;<button id="bookmark-delete">&#215;</button></span>
+            <button id="bookmark-add"><b>&#43;</b></button>&nbsp;
+            <span class="right">&nbsp;<button id="bookmark-delete"><b>&#215;</b></button></span>
             <span id="bookmark-list"></span>
           </div>
         </div>
@@ -303,7 +317,8 @@ function colStyleGen($prefix = "col") {
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
       }, error => { console.log(error); });
-      
+      let ua = document.getElementById('user-agent');
+      if (ua.innerHTML === 'N/A') ua.innerHTML = navigator.userAgent;
     } // end of init()
 
     ipfy(url) {
@@ -385,7 +400,7 @@ function colStyleGen($prefix = "col") {
     } // end of copyResult()
 
     hideOtherBoxes() {
-      let boxes = ['infobox-wrapper', 'search-wrapper', 'current-dir-wrapper', 'time-wrapper', 'bookmark-wrapper', 'bookmark-detail-wrapper'];
+      let boxes = ['infobox-wrapper', 'infobox-more', 'search-wrapper', 'current-dir-wrapper', 'time-wrapper', 'bookmark-wrapper', 'bookmark-detail-wrapper'];
       boxes.forEach(v => { document.getElementById(v).classList.add('hidden'); });
     }
 
@@ -401,6 +416,7 @@ function colStyleGen($prefix = "col") {
       keys.forEach(v => {
         if (v.includes(keyPrefix)) items.push(JSON.parse(localStorage[v]));
       });
+      items.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
       return items;
     } // end of getItems();
 
@@ -426,7 +442,7 @@ function colStyleGen($prefix = "col") {
         });
         list.appendChild(a);
       });
-      if (!list.firstChild) list.innerHTML = '<em>Silence is golden.</em>';
+      if (!list.firstChild) list.innerHTML = '<em>Such empty!</em>';
     } // end of listBookmarks()
 
     addBookmark() {
@@ -490,7 +506,7 @@ function colStyleGen($prefix = "col") {
         list.appendChild(elm);
         list.appendChild(document.createElement('hr'));
       });
-      // if (!list.firstChild) list.innerHTML = '<em>Silence is golden.</em>';
+      // if (!list.firstChild) list.innerHTML = '<em>Such empty!</em>';
     } // end of listTodos()
 
     addTodo() {
@@ -548,7 +564,9 @@ function colStyleGen($prefix = "col") {
         this.addBookmark();
       });
       document.getElementById('bookmark-delete').addEventListener('click', e => {
-        document.getElementById('bookmark-wrapper').classList.toggle('exterminate');
+        if (document.querySelectorAll('#bookmark-list a.bookmark').length > 0)
+          document.getElementById('bookmark-wrapper').classList.toggle('exterminate');
+        else this.showMsg('Silence is golden.');
       });
       document.getElementById('copy-code').addEventListener('click', e => {
         this.copyCode();
@@ -558,6 +576,10 @@ function colStyleGen($prefix = "col") {
       });
       document.getElementById('todo-box').addEventListener('keydown', e => {
         if (e.ctrlKey && e.keyCode === 13) this.addTodo();
+      });
+      document.getElementById('more-info').addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('infobox-more').classList.toggle('hidden');
       });
     } // end of registerEvents()
 
@@ -614,27 +636,33 @@ class Pi {
     }
   } // end of _handleRequests()
 
+  public function getOS() {
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') return 'WINDOWS';
+    else if (strtoupper(PHP_OS) === 'LINUX') return 'LINUX';
+    else return 'UNKNOWN';
+  }
+
   public function getLocalAddress() {
-    if(strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+    if ($this->getOS() === 'WINDOWS') {
       exec("ipconfig /all", $output);
-      foreach($output as $line) {
-        if(preg_match("/(.*)IPv4 Address(.*)/", $line)) {
-          if(preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match)) {
-            if(filter_var($match[0], FILTER_VALIDATE_IP)) { return trim($match[0]); }
+      foreach ($output as $line) {
+        if (preg_match("/(.*)IPv4 Address(.*)/", $line)) {
+          if (preg_match('/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/', $line, $match)) {
+            if (filter_var($match[0], FILTER_VALIDATE_IP)) { return trim($match[0]); }
           }
         }
       } // endforeach
-    } else if(strtoupper(PHP_OS) == 'LINUX') {
+    } else if ($this->getOS() === 'LINUX') {
       $methods = array();
       $interfaces = array_diff(explode(PHP_EOL, `ls -1 /sys/class/net`), ['', 'lo', 'docker0', 'virbr0']);
       $methods[] = function() { return `hostname -I | awk '{print $1}'`; };
-      foreach($interfaces as $interface) {
+      foreach ($interfaces as $interface) {
         $methods[] = function() { return exec("ip a $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
         $methods[] = function() { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
       }
-      foreach($methods as $method) {
+      foreach ($methods as $method) {
         $ip = trim($method());
-        if(filter_var($ip, FILTER_VALIDATE_IP)) { return $ip; }
+        if (filter_var($ip, FILTER_VALIDATE_IP)) { return $ip; }
       } // endforeach
     }
     return "N/A";
@@ -652,6 +680,14 @@ class Pi {
     }
     return array($directories, $files_list);
   } // end of getDirContents()
+
+  public function getDetails($what = 'sys') {
+    if ($what === 'mem') return exec('free -g | grep \'Mem:\' | awk \'{print $4"/"$2"G Free"}\'');
+    else if ($what === 'disk') return exec('df -h | grep \' /$\' | awk \'{print "Used: "$5" | Free: "$4"/"$2}\'');
+    else if ($what === 'ua') return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'N/A';
+    else if ($what === 'who') return exec('whoami');
+    else return exec('uname -a');
+  }
 
 } // end of class Pi
 
