@@ -146,6 +146,14 @@ function colStyleGen($prefix = "col") {
     .delete-todo { font-weight: bold; }
     .content h3, .content h1 { margin: 14px; }
     .infobox { padding: 2px 10px; }
+    a#night-mode { color: inherit; padding-left: 4px; }
+    .night { color: lightgray; background-color: black; }
+    .night .callout { border: 1px solid lightgray; }
+    .night .current-dir:hover { background-color: darkslategrey; }
+    .night textarea#code-box, #code-result { background-color: darkslategrey; color: white; }
+    .night textarea#code-box::placeholder { color: darkgrey; }
+    .night a { color: teal; }
+    .night a#night-mode { color: white; }
   </style>
   </meta>
 </head>
@@ -284,7 +292,10 @@ function colStyleGen($prefix = "col") {
         </div>
 
         <div class="row">
-          <div class="blurry text-right pad-right"><em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em></div>
+          <div class="blurry text-right pad-right">
+            <em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em>
+            <span><a href="#" id="night-mode" title="Toggle night mode">&#127767;</a></span><!-- 127769 -->
+          </div>
         </div>
       </div><!-- main -->
 
@@ -320,6 +331,7 @@ function colStyleGen($prefix = "col") {
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
       }, error => { console.log(error); });
+      if (this.getNightMode() === 'true') document.getElementsByTagName('body')[0].classList.add('night');
       let ua = document.getElementById('user-agent');
       if (ua.innerHTML === 'N/A') ua.innerHTML = navigator.userAgent;
     } // end of init()
@@ -534,6 +546,19 @@ function colStyleGen($prefix = "col") {
       this.listTodos();
     } // end of deleteTodo()
 
+    getNightMode() {
+      let key = this._prefix + 'config-nightmode';
+      let val = localStorage.getItem(key);
+      return val ? val : 'false';
+    } // end of getNightMode()
+
+    toggleNightMode() {
+      let key = this._prefix + 'config-nightmode';
+      let val = this.getNightMode();
+      val = val === 'true' ? 'false' : 'true';
+      localStorage.setItem(key, val);
+    } // end of toggleNightMode()
+
     registerEvents() {
       document.getElementById('phpinfo').addEventListener('click', e => {
         e.preventDefault();
@@ -584,6 +609,12 @@ function colStyleGen($prefix = "col") {
       document.getElementById('more-info').addEventListener('click', e => {
         e.preventDefault();
         document.getElementById('infobox-more').classList.toggle('hidden');
+      });
+      document.getElementById('night-mode').addEventListener('click', e => {
+        e.preventDefault();
+        let body = document.getElementsByTagName('body')[0];
+        body.classList.toggle('night');
+        this.toggleNightMode();
       });
     } // end of registerEvents()
 
@@ -686,7 +717,7 @@ class Pi {
   } // end of getDirContents()
 
   public function getDetails($what = 'sys') {
-    if ($what === 'mem') return exec('free -g | grep \'Mem:\' | awk \'{print $4"/"$2"G Free"}\'');
+    if ($what === 'mem') return exec('free -g | grep \'Mem:\' | awk \'{print $3"/"$2"G Used"}\'');
     else if ($what === 'disk') return exec('df -h | grep \' /$\' | awk \'{print "Used: "$5" | Free: "$4"/"$2}\'');
     else if ($what === 'ua') return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'N/A';
     else if ($what === 'who') return exec('whoami');
