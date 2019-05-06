@@ -150,7 +150,7 @@ function colStyleGen($prefix = "col") {
     .night { color: lightgray; background-color: black; }
     .night .callout { border: 1px solid lightgray; }
     .night .current-dir:hover { background-color: darkslategrey; }
-    .night textarea#code-box, #code-result { background-color: darkslategrey; color: white; }
+    .night textarea#code-box, .night #code-result { background-color: darkslategrey; color: white; }
     .night textarea#code-box::placeholder { color: darkgrey; }
     .night a { color: teal; }
     .night a#night-mode { color: white; }
@@ -656,7 +656,7 @@ class Pi {
           print_r(unserialize($code));
           break;
         case 'jsonlint':
-          $data = json_decode($code);
+          $data = json_decode(trim($code));
           $jout = json_last_error() === JSON_ERROR_NONE ? json_encode($data, JSON_PRETTY_PRINT) : '<em class="warn">[Invalid JSON]</em>';
           print $jout;
           break;
