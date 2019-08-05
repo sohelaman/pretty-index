@@ -127,6 +127,7 @@ function colStyleGen($prefix = "col") {
     .pad-left { padding-left: 10px; }
     .pad { padding: 4px; }
     .wide { width: 100%; }
+    .word-wrap { word-wrap: break-word; }
     .hidden { display: none; }
     .dark-matter { visibility: hidden; }
     .blurry { opacity: 0.4; }
@@ -187,7 +188,7 @@ function colStyleGen($prefix = "col") {
                 <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
                 <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
               </div>
-              <div class="col-6 col-s-6 infobox text-left">
+              <div class="col-6 col-s-6 infobox text-left word-wrap">
                 <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
                 <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
                 <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
@@ -253,7 +254,7 @@ function colStyleGen($prefix = "col") {
         </div>
 
         <div class="row hidden" id="dir-listing">
-          <div class="row callout">
+          <div class="row callout word-wrap">
             <div class="col-6 col-s-6 text-left">
               <div>Directories</div><hr>
               <?php foreach ($directories as $folder) {
@@ -313,7 +314,7 @@ function colStyleGen($prefix = "col") {
     </div><!-- row -->
 
   </div><!-- content -->
-  
+
 
 </body>
 
@@ -490,7 +491,7 @@ function colStyleGen($prefix = "col") {
         new URL(str);
         return true;
       } catch (_) {
-        return false;  
+        return false;
       }
     }
 
