@@ -806,10 +806,11 @@ class Pi {
     } else if ($this->getOS() === 'LINUX') {
       $methods = array();
       $interfaces = array_diff(explode(PHP_EOL, `ls -1 /sys/class/net`), ['', 'lo', 'docker0', 'virbr0']);
+      $methods[] = function() { return `hostname -i | awk '{print $1}'`; };
       $methods[] = function() { return `hostname -I | awk '{print $1}'`; };
       foreach ($interfaces as $interface) {
-        $methods[] = function() { return exec("ip a $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
-        $methods[] = function() { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
+        $methods[] = function() use($interface) { return exec("ip a $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
+        $methods[] = function() use($interface) { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
       }
       foreach ($methods as $method) {
         $ip = trim($method());
