@@ -19,7 +19,7 @@ function colStyleGen($prefix = "col") {
 <head>
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>Pretty Index</title>
-  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII=" />
+  <link rel="icon" type="image/x-icon" href="#"/>
   <style type="text/css">
     * { box-sizing: border-box; }
     html { font-family: "Lato", sans-serif; }
@@ -54,7 +54,7 @@ function colStyleGen($prefix = "col") {
       border: none;
       color: white;
       padding: 5px;
-      margin: 3px;
+      margin: 3px 1px;
       text-align: center;
       text-decoration: none;
       display: inline-block;
@@ -194,7 +194,7 @@ function colStyleGen($prefix = "col") {
                 <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
                 <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
               </div>
-              <div class="row"><a href="#" id="more-info">&#128899;</a></div>
+              <div class="row"><a href="#" id="more-info" title="More info">&#128899;</a></div>
             </div>
           </div>
         </div>
@@ -226,8 +226,8 @@ function colStyleGen($prefix = "col") {
 
         <div class="row" id="bookmark-wrapper">
           <div class="callout text-left">
-            <button id="bookmark-add"><b>&#43;</b></button>&nbsp;
-            <span class="right">&nbsp;<button id="bookmark-delete"><b>&#215;</b></button></span>
+            <button id="bookmark-add" title="Add bookmark"><b>&plus;</b></button>&nbsp;
+            <span class="right">&nbsp;<button id="bookmark-delete" title="Delete bookmark"><b>&times;</b></button></span>
             <span id="bookmark-list"></span>
           </div>
         </div>
@@ -249,7 +249,7 @@ function colStyleGen($prefix = "col") {
 
         <div class="row" id="current-dir-wrapper">
           <div class="callout current-dir">
-            <a href="#" id="current-dir"><div><strong><?php echo __DIR__; ?></strong></div></a>
+            <a href="#" id="current-dir" title="Toggle"><div><strong><?php echo __DIR__; ?></strong></div></a>
           </div>
         </div>
 
@@ -275,21 +275,29 @@ function colStyleGen($prefix = "col") {
             <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
             <select name="operation" id="operation">
               <option value="eval">PHP</option>
-              <option value="jsonlint">JSON Lint</option>
+              <option value="md5">MD5</option>
               <option value="base64encode">Base64 Encode</option>
               <option value="base64decode">Base64 Decode</option>
               <option value="serialize">Serialize</option>
               <option value="unserialize">Unserialize</option>
+              <option value="jsonlint">JSON Lint</option>
+              <option value="parseUri">Parse URI</option>
             </select>
             <button class="btn" id="code-submit">Execute</button>
             <button class="btn" id="copy-code">Copy</button>
             <button class="btn hidden" id="copy-result">Copy Result</button>
+            <button class="btn hidden" id="raw-result" title="Raw result">{ }</button>
             <em class="pad hidden" id="code-msg"></em>
             <div class="spinner right" id="spinner"></div>
           </div>
         </div>
         <div class="row hidden" id="code-result-wrapper">
           <div class="callout text-left" id="code-result"></div>
+        </div>
+        <div class="row hidden">
+          <form id="raw-result-form" method="post" target="_blank">
+            <input id="raw-result-val" type="text" name="raw-result" value="">
+          </form>
         </div>
 
         <div class="row">
@@ -305,7 +313,7 @@ function colStyleGen($prefix = "col") {
           <div class="pad">
             <div><strong>Todos</strong></div>
             <div class="spacer"></div>
-            <textarea id="todo-box" placeholder="What to do?"></textarea>
+            <textarea id="todo-box" placeholder="What to do?" title="Hit Ctrl+Return to save"></textarea>
             <div id="todo-list"></div>
           </div>
         </div>
@@ -376,13 +384,14 @@ function colStyleGen($prefix = "col") {
           document.getElementById('code-result').innerHTML = result ? '<pre>' + result + '</pre>' : '<em class="warn">[No output]<em>';
           document.getElementById('code-result-wrapper').classList.remove('hidden');
           document.getElementById('copy-result').classList.remove('hidden');
+          document.getElementById('raw-result').classList.remove('hidden');
           this.hideOtherBoxes();
           this.loaderSpinner(true);
         }
       };
       xhttp.open("POST", window.location.href, true);
       xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      xhttp.send('code-box=' + code + '&operation=' + op);
+      xhttp.send('code-box=' + btoa(code) + '&operation=' + op);
     } // end of codeSubmit()
 
     showMsg(msg) {
@@ -414,6 +423,14 @@ function colStyleGen($prefix = "col") {
       document.removeEventListener("copy", resultCopyListener);
       this.showMsg('Result copied');
     } // end of copyResult()
+
+    rawResult() {
+      let result = document.querySelector('#code-result pre');
+      if (!result || !result.textContent) { this.showMsg('Such empty!'); return; }
+      let str = result.innerHTML; // result.textContent or result.innerHTML
+      document.getElementById('raw-result-val').value = encodeURI(str);
+      document.forms["raw-result-form"].submit();
+    } // end of rawResult()
 
     hideOtherBoxes() {
       let boxes = ['infobox-wrapper', 'infobox-more', 'search-wrapper', 'current-dir-wrapper', 'time-wrapper', 'bookmark-wrapper', 'bookmark-detail-wrapper'];
@@ -604,6 +621,9 @@ function colStyleGen($prefix = "col") {
       document.getElementById('copy-result').addEventListener('click', e => {
         this.copyResult();
       });
+      document.getElementById('raw-result').addEventListener('click', e => {
+        this.rawResult();
+      });
       document.getElementById('todo-box').addEventListener('keydown', e => {
         if (e.ctrlKey && e.keyCode === 13) this.addTodo();
       });
@@ -636,14 +656,19 @@ class Pi {
   }
 
   private function _handleRequests() {
-    if (!empty($_REQUEST['phpinfo']) && $_REQUEST['phpinfo'] == 1) {
+    if (!empty($_REQUEST['raw-result'])) {
+      die(urldecode($_REQUEST['raw-result']));
+    } else if (!empty($_REQUEST['phpinfo']) && $_REQUEST['phpinfo'] == 1) {
       phpinfo();
       exit;
     } else if(!empty($_POST['code-box']) && isset($_POST['operation'])) {
-      $code = trim($_POST['code-box']);
+      $code = base64_decode($_POST['code-box']);
       $operation = $_POST['operation'];
       ob_start();
       switch ($operation) {
+        case 'md5':
+          echo md5($code);
+          break;
         case 'base64encode':
           echo base64_encode($code);
           break;
@@ -656,9 +681,12 @@ class Pi {
         case 'unserialize':
           print_r(unserialize($code));
           break;
+        case 'parseUri':
+          print $this->parseURI($code);
+          break;
         case 'jsonlint':
           $data = json_decode(trim($code));
-          $jout = json_last_error() === JSON_ERROR_NONE ? json_encode($data, JSON_PRETTY_PRINT) : '<em class="warn">[Invalid JSON]</em>';
+          $jout = json_last_error() === JSON_ERROR_NONE ? json_encode($data, JSON_PRETTY_PRINT) : '<em class="warn">[Invalid format]</em>';
           print $jout;
           break;
         default:
@@ -723,6 +751,19 @@ class Pi {
     else if ($what === 'ua') return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'N/A';
     else if ($what === 'who') return exec('whoami');
     else return exec('uname -a');
+  }
+
+  public function parseURI($str) {
+    if (!filter_var($str, FILTER_VALIDATE_URL)) return '<em class="warn">[Invalid URI]</em>';
+    $info = parse_url($str);
+    $info['length'] = strlen($str);
+    $query_params = null;
+    $fragment_params = null;
+    if (!empty($info['query'])) parse_str($info['query'], $query_params);
+    if (!empty($info['fragment'])) parse_str(ltrim($info['fragment'], '?'), $fragment_params);
+    $info['query_params'] = $query_params;
+    $info['fragment_params'] = $fragment_params;
+    return print_r($info, true);
   }
 
 } // end of class Pi

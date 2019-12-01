@@ -1,18 +1,22 @@
 # Pretty Index
+A simple yet useful index.php page for developers.
 
-## A simple yet useful index page for web developers
+## Features
+* Displays important information about the server and configuration.
+	- Displays public IP, server IP, etc.
+	- Displays configurations, i.e. PHP version, loaded ini, timezone, phpinfo, etc.
+* Search in the web.
+* Run PHP code.
+* Helpers
+	- Encode to and decode from base64 string.
+	- Serialze and unserialize string.
+	- Prettify JSON.
+	- Parse URI string, etc. 
+* Directory listing.
+* Bookmarks.
+* Todos.
 
-### Features
-* Displays important information about the server
-	- Displays public IP, LAN IP, host IP and remote IP in one place
-	- Displays important server and PHP configurations, i.e. PHP version, loaded configuration, timezone, phpinfo, etc.
-* Search in the web
-* Directory listing
-* Evaluate PHP code
-* Encode to and decode from base64 string
-* Serialize and unserialize data
-* Lint JSON
-* Bookmarks
-* Todos
+![Pretty Index](https://i.imgur.com/QHzf60x.png "Pretty Index")
 
-**Note: This index.php is ONLY for development purpose. DO NOT put this in your production server.**
+### Notes
+- ONLY for development purpose. DO NOT put this in your production server.
