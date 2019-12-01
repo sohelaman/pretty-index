@@ -1,18 +1,4 @@
-<?php
-
-$pi = new Pi();
-$current_dir_url = rtrim("//" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/');
-list($directories, $files) = $pi->getDirContents();
-$local_addr = $pi->getLocalAddress();
-
-function colStyleGen($prefix = "col") {
-  $temp = '';
-  for ($i = 1; $i < 13; $i++) {$w = round($i * (100 / 12), 2);
-    $temp .= '.' . $prefix . "-{$i} {width: {$w}%;}\n";}
-  return $temp;
-} // end of colStyleGen()
-
-?>
+<?php $pi = new Pi(); /* Pretty Index */ ?>
 
 <!DOCTYPE html>
 <html>
@@ -98,12 +84,12 @@ function colStyleGen($prefix = "col") {
 
     @media only screen and (min-width: 600px) {
       /* For tablets: */
-      <?php print colStyleGen('col-s');?>
+      <?php print Pi::colStyleGen('col-s');?>
     }
 
     @media only screen and (min-width: 768px) {
       /* For desktop: */
-      <?php print colStyleGen();?>
+      <?php print Pi::colStyleGen();?>
     }
   </style>
   <style type="text/css">
@@ -126,6 +112,7 @@ function colStyleGen($prefix = "col") {
     .pad-right { padding-right: 10px; }
     .pad-left { padding-left: 10px; }
     .pad { padding: 4px; }
+    .pad-sides { padding: 0 4px; }
     .wide { width: 100%; }
     .word-wrap { word-wrap: break-word; }
     .hidden { display: none; }
@@ -137,7 +124,7 @@ function colStyleGen($prefix = "col") {
     .content textarea { width: 100%; resize: vertical; }
     .content textarea#code-box, #code-result { font-family: monospace, sans-serif; background-color: whitesmoke; }
     .content #search-query { min-width: 50%; }
-    .content #code-result, #todo-list { overflow-x: auto; }
+    .content #code-result, #todo-list, #history-list { overflow-x: auto; }
     .error { color: red; }
     .warn { color: orange; }
     .spinner { display: none; }
@@ -184,7 +171,7 @@ function colStyleGen($prefix = "col") {
             <div class="row">
               <div class="col-6 col-s-6 infobox text-right">
                 <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
-                <div>LAN IP : <b><?php echo $local_addr; ?></b></div>
+                <div>LAN IP : <b><?php echo $pi->getLocalAddress(); ?></b></div>
                 <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
                 <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
               </div>
@@ -253,6 +240,9 @@ function colStyleGen($prefix = "col") {
           </div>
         </div>
 
+        <?php $current_dir_url = rtrim("//" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/'); ?>
+        <?php list($directories, $files) = $pi->getDirContents(); ?>
+
         <div class="row hidden" id="dir-listing">
           <div class="row callout word-wrap">
             <div class="col-6 col-s-6 text-left">
@@ -317,6 +307,14 @@ function colStyleGen($prefix = "col") {
             <div id="todo-list"></div>
           </div>
         </div>
+        <div class="spacer"></div>
+        <div class="callout">
+          <div class="pad">
+            <div><strong>History &nbsp;<a href="#" id="clear-histories" title="Clear all histories">&times;</a></strong></div>
+            <div class="spacer"></div>
+            <div id="history-list"></div>
+          </div>
+        </div>
       </div><!-- sidepane -->
 
     </div><!-- row -->
@@ -337,6 +335,7 @@ function colStyleGen($prefix = "col") {
       this.registerEvents();
       this.listBookmarks();
       this.listTodos();
+      this.listHistories();
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
       }, error => { console.log(error); });
@@ -392,6 +391,7 @@ function colStyleGen($prefix = "col") {
       xhttp.open("POST", window.location.href, true);
       xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       xhttp.send('code-box=' + btoa(code) + '&operation=' + op);
+      this.addHistory();
     } // end of codeSubmit()
 
     showMsg(msg) {
@@ -442,14 +442,50 @@ function colStyleGen($prefix = "col") {
       document.getElementById('spinner').style.display = disp;
     }
 
-    getItems(type) {
+    isValidURL(str) {
+      try {
+        new URL(str);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    addItem(type, data, callback) {
+      if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
+      let indexKey = this._prefix + type + '_index';
+      let index = localStorage.getItem(indexKey);
+      index = index ? parseInt(index) : 0;
+      index++;
+      data.id = index;
+      let key = this._prefix + type + '-' + index;
+      localStorage.setItem(key, JSON.stringify(data));
+      localStorage.setItem(indexKey, index);
+    } // end of addItem()
+
+    deleteItem(type, index) {
+      console.log('hi', index);
+      let key = this._prefix + type + '-' + index;
+      localStorage.removeItem(key);
+    } // end of deleteItem()
+
+    getItem(type, index) {
+      let key = this._prefix + type + '-' + index;
+      let item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : false;
+    } // end of getItem()
+
+    getItems(type, descending) {
       if (!localStorage) return false;
-      let items = [], keyPrefix = type === 'todo' ? this._prefix + 'todo-' : this._prefix + 'bookmark-';
+      let items = [], keyPrefix = this._prefix + type + '-';
       let keys = Object.keys(localStorage);
       keys.forEach(v => {
         if (v.includes(keyPrefix)) items.push(JSON.parse(localStorage[v]));
       });
-      items.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
+      if (!!descending)
+        items.sort((a,b) => (a.id < b.id) ? 1 : ((b.id < a.id) ? -1 : 0));
+      else
+        items.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
       return items;
     } // end of getItems();
 
@@ -479,17 +515,12 @@ function colStyleGen($prefix = "col") {
     } // end of listBookmarks()
 
     addBookmark() {
-      let index = localStorage.getItem(this._prefix + 'bookmark_index');
-      index = index ? parseInt(index) : 0;
-      index++;
       let name = document.getElementById('bookmark-name');
       let url = document.getElementById('bookmark-url');
       if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Something is missing! Mhmm, your intelligence.'); return; }
       if (!this.isValidURL(url.value)) { alert("I said the 'real' URL."); return; }
-      let key = this._prefix + 'bookmark-' + index;
-      let bm = { id: index, name: name.value.trim(), url: url.value.trim() };
-      localStorage.setItem(key, JSON.stringify(bm));
-      localStorage.setItem(this._prefix + 'bookmark_index', index);
+      let bm = { id: null, name: name.value.trim(), url: url.value.trim() };
+      this.addItem('bookmark', bm);
       name.value = null;
       url.value = null;
       document.getElementById('bookmark-detail-wrapper').classList.add('hidden');
@@ -498,18 +529,8 @@ function colStyleGen($prefix = "col") {
 
     deleteBookmark(index) {
       if (!confirm('Delete bookmark?')) return;
-      let key = this._prefix + 'bookmark-' + index;
-      localStorage.removeItem(key);
+      this.deleteItem('bookmark', index);
       this.listBookmarks();
-    }
-
-    isValidURL(str) {
-      try {
-        new URL(str);
-        return true;
-      } catch (_) {
-        return false;
-      }
     }
 
     listTodos() {
@@ -521,7 +542,7 @@ function colStyleGen($prefix = "col") {
       if (todos.length > 0) list.appendChild(document.createElement('hr'));
       todos.forEach(v => {
         let del = document.createElement('a');
-        del.innerHTML = '&#215;';
+        del.innerHTML = '&times;';
         del.href = '#';
         del.classList.add('delete-todo');
         del.setAttribute('data-id', v.id);
@@ -543,26 +564,88 @@ function colStyleGen($prefix = "col") {
     } // end of listTodos()
 
     addTodo() {
-      if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
-      let index = localStorage.getItem(this._prefix + 'todo_index');
-      index = index ? parseInt(index) : 0;
-      index++;
       let body = document.getElementById('todo-box');
       if (!body.value || !body.value.trim()) { window.location.href = 'https://en.wikipedia.org/wiki/Nothing'; return; }
-      let key = this._prefix + 'todo-' + index;
-      let todo = { id: index, body: body.value.trim() };
-      localStorage.setItem(key, JSON.stringify(todo));
-      localStorage.setItem(this._prefix + 'todo_index', index);
+      let todo = { id: null, body: body.value.trim() };
+      this.addItem('todo', todo);
       body.value = null;
       this.listTodos();
     } // end of addTodo()
 
     deleteTodo(index) {
       if (!confirm('Delete todo?')) return;
-      let key = this._prefix + 'todo-' + index;
-      localStorage.removeItem(key);
+      this.deleteItem('todo', index);
       this.listTodos();
     } // end of deleteTodo()
+
+    addHistory() {
+      let body = document.getElementById('code-box');
+      if (!body.value || !body.value.trim()) return;
+      let excerptLen = 22;
+      let excerpt = body.value.trim().substring(0, excerptLen);
+      if (body.value.trim().length > excerptLen) excerpt += '...';
+      let op = document.getElementById('operation').value;
+      let hist = {id: null, body: btoa(body.value.trim()), op: op, excerpt: excerpt};
+      this.addItem('history', hist);
+      this.listHistories();
+    } // end of addHistory()
+
+    deleteHistory(index) {
+      if (!confirm('Delete history?')) return;
+      this.deleteItem('history', index);
+      this.listHistories();
+    } // end of deleteHistory()
+
+    clearHistories() {
+      if (!confirm('Clear all histories?')) return;
+      let hists = this.getItems('history');
+      hists.forEach(v => { this.deleteItem('history', v.id); });
+      this.listHistories();
+    } // end of clearHistories()
+
+    listHistories() {
+      let hists = this.getItems('history', true);
+      let list = document.getElementById('history-list');
+      while (list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
+      // if (hists.length > 0) list.appendChild(document.createElement('hr'));
+      hists.forEach(v => {
+        let del = document.createElement('a');
+        del.innerHTML = '&times;&nbsp;';
+        del.href = '#';
+        del.classList.add('delete-history');
+        del.setAttribute('data-id', v.id);
+        del.setAttribute('title', 'Delete');
+        del.addEventListener('click', e => {
+          e.preventDefault();
+          this.deleteHistory(e.target.getAttribute('data-id'));
+        });
+        list.appendChild(del);
+        let elm = document.createElement('a');
+        elm.href = '#';
+        elm.innerHTML = v.excerpt;
+        elm.classList.add('history');
+        elm.classList.add('pad-sides');
+        elm.setAttribute('data-id', v.id);
+        elm.addEventListener('click', e => {
+          e.preventDefault();
+          this.loadHistory(e.target.getAttribute('data-id'));
+        });
+        list.appendChild(elm);
+        list.appendChild(document.createElement('br'));
+      });
+      if (!list.firstChild) list.innerHTML = '<em>The entire history of you.</em>';
+    } // end of listHistories()
+
+    loadHistory(index) {
+      let hist = this.getItem('history', index);
+      if (hist) {
+        document.getElementById('code-box').value = atob(hist.body);
+        document.getElementById('operation').value = hist.op;
+        this.hideOtherBoxes();
+      }
+    } // end of loadHistory()
 
     getNightMode() {
       let key = this._prefix + 'config-nightmode';
@@ -623,6 +706,10 @@ function colStyleGen($prefix = "col") {
       });
       document.getElementById('raw-result').addEventListener('click', e => {
         this.rawResult();
+      });
+      document.getElementById('clear-histories').addEventListener('click', e => {
+        e.preventDefault();
+        this.clearHistories();
       });
       document.getElementById('todo-box').addEventListener('keydown', e => {
         if (e.ctrlKey && e.keyCode === 13) this.addTodo();
@@ -764,7 +851,14 @@ class Pi {
     $info['query_params'] = $query_params;
     $info['fragment_params'] = $fragment_params;
     return print_r($info, true);
-  }
+  } // end of parseURI()
+
+  public static function colStyleGen($prefix = "col") {
+    $temp = '';
+    for ($i = 1; $i < 13; $i++) {$w = round($i * (100 / 12), 2);
+      $temp .= '.' . $prefix . "-{$i} {width: {$w}%;}\n";}
+    return $temp;
+  } // end of colStyleGen()
 
 } // end of class Pi
 

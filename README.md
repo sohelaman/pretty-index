@@ -19,4 +19,4 @@ A simple yet useful index.php page for developers.
 ![Pretty Index](https://i.imgur.com/QHzf60x.png "Pretty Index")
 
 ### Notes
-- ONLY for development purpose. DO NOT put this in your production server.
+- ONLY for development purpose. DO NOT put this in a production server.
