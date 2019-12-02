@@ -507,6 +507,7 @@
           if (document.getElementById('bookmark-wrapper').classList.contains('exterminate')) {
             e.preventDefault();
             this.deleteBookmark(e.target.getAttribute('data-id'));
+            document.getElementById('bookmark-wrapper').classList.remove('exterminate');
           }
         });
         list.appendChild(a);
@@ -581,11 +582,20 @@
     addHistory() {
       let body = document.getElementById('code-box');
       if (!body.value || !body.value.trim()) return;
+      let code = body.value.trim();
+      let hash = this.int32Hash(code);
+      let histories = this.getItems('history', true);
+      for (let i = 0; i < histories.length; i++) {
+        if (histories[i].hash === hash) {
+          this.deleteItem('history', histories[i].id);
+          break;
+        }
+      } // endfor
       let excerptLen = 22;
-      let excerpt = body.value.trim().substring(0, excerptLen);
-      if (body.value.trim().length > excerptLen) excerpt += '...';
+      let excerpt = code.substring(0, excerptLen);
+      if (code.length > excerptLen) excerpt += '...';
       let op = document.getElementById('operation').value;
-      let hist = {id: null, body: btoa(body.value.trim()), op: op, excerpt: excerpt};
+      let hist = {id: null, hash: hash, op: op, excerpt: excerpt, body: btoa(code)};
       this.addItem('history', hist);
       this.listHistories();
     } // end of addHistory()
@@ -659,6 +669,18 @@
       val = val === 'true' ? 'false' : 'true';
       localStorage.setItem(key, val);
     } // end of toggleNightMode()
+
+    int32Hash(str) {
+      // source: https://stackoverflow.com/questions/7616461
+      var hash = 0, i, chr;
+      if (str.length === 0) return hash;
+      for (i = 0; i < str.length; i++) {
+        chr   = str.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+      }
+      return hash;
+    } // end of int32Hash()
 
     registerEvents() {
       document.getElementById('phpinfo').addEventListener('click', e => {
