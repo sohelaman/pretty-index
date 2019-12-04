@@ -128,10 +128,12 @@
     .error { color: red; }
     .warn { color: orange; }
     .spinner { display: none; }
-    .content .exterminate a.bookmark { color: red; }
+    .content .exterminate a.bookmark, .content .excavate a.bookmark { color: red; }
     .content .exterminate a.bookmark:hover { text-decoration: line-through; }
+    .content .excavate a.bookmark:hover { font-weight: bold; }
     /*.sidepane { padding-left: 0; }*/
-    .delete-todo { font-weight: bold; }
+    .bold, .delete-todo { font-weight: bold; }
+    .underlined { text-decoration: underline; }
     .content h3, .content h1 { margin: 14px; }
     .infobox { padding: 2px 10px; }
     a#night-mode { color: inherit; padding-left: 4px; }
@@ -142,6 +144,7 @@
     .night textarea#code-box::placeholder { color: darkgrey; }
     .night a { color: teal; }
     .night a#night-mode { color: white; }
+    .truncate { width: 9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
   </meta>
 </head>
@@ -176,8 +179,8 @@
                 <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
               </div>
               <div class="col-6 col-s-6 infobox text-left word-wrap">
-                <div>Document Root : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
-                <div>PHP : <a href="#" id="phpinfo"><b><?php echo phpversion(); ?></b></a></div>
+                <div>DocRoot : <b><?php echo $_SERVER['DOCUMENT_ROOT']; ?></b></div>
+                <div class="truncate">PHP : <a href="#" id="phpinfo" title="<?php echo phpversion(); ?>"><b><?php echo phpversion(); ?></b></a></div>
                 <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
                 <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
               </div>
@@ -192,6 +195,7 @@
             <?php $who = $pi->getDetails('who'); if ($who): ?><div class="pad"><b>User:</b> <em><?php print $who; ?></em></div><?php endif; ?>
             <?php $sys = $pi->getDetails('sys'); if ($disk): ?><div class="pad"><b>System:</b> <em><?php print $sys; ?></em></div><?php endif; ?>
             <div class="pad"><b>UA:</b> <em id="user-agent"><?php print $pi->getDetails('ua'); ?></em></div>
+            <div class="pad"><b>PHP Extensions:</b> <em id="php-exts"><?php print $pi->getDetails('phpexts'); ?></em></div>
           </div>
         </div>
 
@@ -214,7 +218,10 @@
         <div class="row" id="bookmark-wrapper">
           <div class="callout text-left">
             <button id="bookmark-add" title="Add bookmark"><b>&plus;</b></button>&nbsp;
-            <span class="right">&nbsp;<button id="bookmark-delete" title="Delete bookmark"><b>&times;</b></button></span>
+            <span class="right">&nbsp;
+              <button id="bookmark-edit" title="Edit bookmark"><b>~</b></button>
+              <button id="bookmark-delete" title="Delete bookmark"><b>&times;</b></button>
+            </span>
             <span id="bookmark-list"></span>
           </div>
         </div>
@@ -228,7 +235,7 @@
                 <input class="wide" type="text" name="bookmark-url" id="bookmark-url" placeholder="Real URL">
               </div>
               <div class="col-2 col-s-2">
-                <button class="btn" id="bookmark-save">Save</button>
+                <button class="btn" id="bookmark-save" data-id="0">Save</button>
               </div>
             </div>
           </div>
@@ -328,10 +335,13 @@
   class Pi {
     constructor() {
       this._prefix = '_pretty_index__';
+      this._maxHistories = 50; // maximum number of histories to keep. 
+      this._historyExcerptLength = 22; // history excerpt length before truncating.
       this.init();
     }
 
     init() {
+      if (this.getNightMode() === 'true') document.getElementsByTagName('body')[0].classList.add('night');
       this.registerEvents();
       this.listBookmarks();
       this.listTodos();
@@ -339,7 +349,6 @@
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
       }, error => { console.log(error); });
-      if (this.getNightMode() === 'true') document.getElementsByTagName('body')[0].classList.add('night');
       let ua = document.getElementById('user-agent');
       if (ua.innerHTML === 'N/A') ua.innerHTML = navigator.userAgent;
     } // end of init()
@@ -451,16 +460,21 @@
       }
     }
 
-    addItem(type, data, callback) {
+    addItem(type, data) {
       if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
-      let indexKey = this._prefix + type + '_index';
-      let index = localStorage.getItem(indexKey);
-      index = index ? parseInt(index) : 0;
-      index++;
-      data.id = index;
-      let key = this._prefix + type + '-' + index;
-      localStorage.setItem(key, JSON.stringify(data));
-      localStorage.setItem(indexKey, index);
+      if (typeof data.id === 'undefined' || data.id === null) {
+        let indexKey = this._prefix + type + '_index';
+        let index = localStorage.getItem(indexKey);
+        index = index ? parseInt(index) : 0;
+        index++;
+        data.id = index;
+        let key = this._prefix + type + '-' + index;
+        localStorage.setItem(key, JSON.stringify(data));
+        localStorage.setItem(indexKey, index);
+      } else {
+        let key = this._prefix + type + '-' + data.id;
+        localStorage.setItem(key, JSON.stringify(data));
+      }
     } // end of addItem()
 
     deleteItem(type, index) {
@@ -508,6 +522,19 @@
             e.preventDefault();
             this.deleteBookmark(e.target.getAttribute('data-id'));
             document.getElementById('bookmark-wrapper').classList.remove('exterminate');
+          } else if (document.getElementById('bookmark-wrapper').classList.contains('excavate')) {
+
+            e.preventDefault();
+            document.querySelectorAll('#bookmark-list a.bookmark').forEach(v => {
+              v.classList.remove('bold');
+            });
+            e.target.classList.add('bold');
+            let index = e.target.getAttribute('data-id');
+            let bm = this.getItem('bookmark', index);
+            document.getElementById('bookmark-detail-wrapper').classList.remove('hidden');
+            document.getElementById('bookmark-save').setAttribute('data-id', index);
+            document.getElementById('bookmark-name').value = bm.name;
+            document.getElementById('bookmark-url').value = bm.url;
           }
         });
         list.appendChild(a);
@@ -515,16 +542,18 @@
       if (!list.firstChild) list.innerHTML = '<em>Such empty!</em>';
     } // end of listBookmarks()
 
-    addBookmark() {
+    addBookmark(updateId) {
       let name = document.getElementById('bookmark-name');
       let url = document.getElementById('bookmark-url');
       if (!name.value || !url.value || !name.value.trim() || !url.value.trim()) { alert('Something is missing! Mhmm, your intelligence.'); return; }
       if (!this.isValidURL(url.value)) { alert("I said the 'real' URL."); return; }
       let bm = { id: null, name: name.value.trim(), url: url.value.trim() };
+      if (updateId && parseInt(updateId) > 0) bm.id = updateId;
       this.addItem('bookmark', bm);
       name.value = null;
       url.value = null;
       document.getElementById('bookmark-detail-wrapper').classList.add('hidden');
+      document.getElementById('bookmark-wrapper').classList.remove('excavate');
       this.listBookmarks();
     } // end of addBookmark()
 
@@ -584,16 +613,17 @@
       if (!body.value || !body.value.trim()) return;
       let code = body.value.trim();
       let hash = this.int32Hash(code);
-      let histories = this.getItems('history', true);
+      let histories = this.getItems('history', true), removedOne = false;
       for (let i = 0; i < histories.length; i++) {
         if (histories[i].hash === hash) {
           this.deleteItem('history', histories[i].id);
+          removedOne = true;
           break;
         }
       } // endfor
-      let excerptLen = 22;
-      let excerpt = code.substring(0, excerptLen);
-      if (code.length > excerptLen) excerpt += '...';
+      if (histories.length >= this._maxHistories && !removedOne) this.deleteItem('history', histories[histories.length - 1].id);
+      let excerpt = code.substring(0, this._historyExcerptLength);
+      if (code.length > this._historyExcerptLength) excerpt += '...';
       let op = document.getElementById('operation').value;
       let hist = {id: null, hash: hash, op: op, excerpt: excerpt, body: btoa(code)};
       this.addItem('history', hist);
@@ -708,17 +738,26 @@
         if (e.ctrlKey && e.keyCode === 13) this.codeSubmit();
       });
       document.getElementById('bookmark-add').addEventListener('click', e => {
-        if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
         document.getElementById('bookmark-detail-wrapper').classList.toggle('hidden');
       });
       document.getElementById('bookmark-save').addEventListener('click', e => {
-        if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
-        this.addBookmark();
+        this.addBookmark(e.target.getAttribute('data-id'));
       });
       document.getElementById('bookmark-delete').addEventListener('click', e => {
         if (document.querySelectorAll('#bookmark-list a.bookmark').length > 0)
           document.getElementById('bookmark-wrapper').classList.toggle('exterminate');
         else this.showMsg('Silence is golden.');
+      });
+      document.getElementById('bookmark-edit').addEventListener('click', e => {
+        if (document.querySelectorAll('#bookmark-list a.bookmark').length > 0)
+          document.getElementById('bookmark-wrapper').classList.toggle('excavate');
+        else this.showMsg('Silence is golden.');
+        if (!document.getElementById('bookmark-wrapper').classList.contains('excavate')) {
+          document.getElementById('bookmark-detail-wrapper').classList.add('hidden');
+          document.querySelectorAll('#bookmark-list a.bookmark').forEach(v => {
+            v.classList.remove('bold');
+          });
+        }
       });
       document.getElementById('copy-code').addEventListener('click', e => {
         this.copyCode();
@@ -860,6 +899,7 @@ class Pi {
     else if ($what === 'disk') return exec('df -h | grep \' /$\' | awk \'{print "Used: "$5" | Free: "$4"/"$2}\'');
     else if ($what === 'ua') return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'N/A';
     else if ($what === 'who') return exec('whoami');
+    else if ($what === 'phpexts') return exec("php -m | grep -E '^[a-zA-Z\_\-]+' | tr '\n' ' '");
     else return exec('uname -a');
   }
 
