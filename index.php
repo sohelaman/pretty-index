@@ -159,7 +159,7 @@
       <div class="main col-9 col-s-12">
         <div class="row" id="host-wrapper">
           <div class="callout">
-            <a href="javascript:location.reload();"><h1>localhost | <?php echo getHostByName(getHostName()); ?></h1></a>
+            <a href="javascript:location.reload();"><h1><?php echo $pi->getDetails('host') . ' | ' . getHostByName(gethostname()); ?></h1></a>
           </div>
         </div>
 
@@ -175,7 +175,7 @@
               <div class="col-6 col-s-6 infobox text-right">
                 <div>Public IP : <b><span id="public-ip">N/A</span></b></div>
                 <div>LAN IP : <b><?php echo $pi->getLocalAddress(); ?></b></div>
-                <div>Host IP : <b><?php echo getHostByName(getHostName()); ?></b></div>
+                <div>Host IP : <b><?php echo getHostByName(gethostname()); ?></b></div>
                 <div>Remote IP : <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b></div>
               </div>
               <div class="col-6 col-s-6 infobox text-left word-wrap">
@@ -193,6 +193,8 @@
             <?php $mem = $pi->getDetails('mem'); if ($mem): ?><div class="pad"><b>Memory:</b> <em><?php print $mem; ?></em></div><?php endif; ?>
             <?php $disk = $pi->getDetails('disk'); if ($disk): ?><div class="pad"><b>Root Filesystem:</b> <em><?php print $disk; ?></em></div><?php endif; ?>
             <?php $who = $pi->getDetails('who'); if ($who): ?><div class="pad"><b>User:</b> <em><?php print $who; ?></em></div><?php endif; ?>
+            <div class="pad"><b>Hostname:</b> <em><?php print getHostName(); ?></em></div>
+            <div class="pad"><b>Server Software:</b> <em><?php print $pi->getDetails('sw'); ?></em></div>
             <?php $sys = $pi->getDetails('sys'); if ($disk): ?><div class="pad"><b>System:</b> <em><?php print $sys; ?></em></div><?php endif; ?>
             <div class="pad"><b>UA:</b> <em id="user-agent"><?php print $pi->getDetails('ua'); ?></em></div>
             <div class="pad"><b>PHP Extensions:</b> <em id="php-exts"><?php print $pi->getDetails('phpexts'); ?></em></div>
@@ -851,7 +853,7 @@ class Pi {
   public function getOS() {
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') return 'WINDOWS';
     else if (strtoupper(PHP_OS) === 'LINUX') return 'LINUX';
-    else return 'UNKNOWN';
+    else return PHP_OS;
   }
 
   public function getLocalAddress() {
@@ -866,7 +868,8 @@ class Pi {
       } // endforeach
     } else if ($this->getOS() === 'LINUX') {
       $methods = array();
-      $interfaces = array_diff(explode(PHP_EOL, `ls -1 /sys/class/net`), ['', 'lo', 'docker0', 'virbr0']);
+      $ifs = explode(PHP_EOL, `ls -1 /sys/class/net`);
+      $interfaces = array_diff($ifs ? $ifs : [], ['', 'lo', 'docker0', 'virbr0']);
       $methods[] = function() { return `hostname -i | awk '{print $1}'`; };
       $methods[] = function() { return `hostname -I | awk '{print $1}'`; };
       foreach ($interfaces as $interface) {
@@ -898,9 +901,11 @@ class Pi {
     if ($what === 'mem') return exec('free -g | grep \'Mem:\' | awk \'{print $3"/"$2"G Used"}\'');
     else if ($what === 'disk') return exec('df -h | grep \' /$\' | awk \'{print "Used: "$5" | Free: "$4"/"$2}\'');
     else if ($what === 'ua') return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'N/A';
+    else if ($what === 'sw') return isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : 'N/A';
+    else if ($what === 'host') return isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : gethostname();
     else if ($what === 'who') return exec('whoami');
     else if ($what === 'phpexts') return exec("php -m | grep -E '^[a-zA-Z\_\-]+' | tr '\n' ' '");
-    else return exec('uname -a');
+    else return php_uname();
   }
 
   public function parseURI($str) {
