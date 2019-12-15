@@ -136,17 +136,16 @@
     .underlined { text-decoration: underline; }
     .content h3, .content h1 { margin: 14px; }
     .infobox { padding: 2px 10px; }
-    a#night-mode { color: inherit; padding-left: 4px; }
-    .night { color: lightgray; background-color: black; }
-    .night .callout { border: 1px solid lightgray; }
-    .night .current-dir:hover { background-color: darkslategrey; }
-    .night textarea#code-box, .night #code-result { background-color: darkslategrey; color: white; }
-    .night textarea#code-box::placeholder { color: darkgrey; }
-    .night a { color: teal; }
-    .night a#night-mode { color: white; }
+    a#dark-mode { color: inherit; padding-left: 4px; }
+    .dark { color: lightgray; background-color: black; }
+    .dark .callout { border: 1px solid lightgray; }
+    .dark .current-dir:hover { background-color: darkslategrey; }
+    .dark textarea#code-box, .dark #code-result { background-color: darkslategrey; color: white; }
+    .dark textarea#code-box::placeholder { color: darkgrey; }
+    .dark a { color: teal; }
+    .dark a#dark-mode { color: white; }
     .truncate { width: 9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
-  </meta>
 </head>
 
 <body>
@@ -279,7 +278,7 @@
               <option value="base64decode">Base64 Decode</option>
               <option value="serialize">Serialize</option>
               <option value="unserialize">Unserialize</option>
-              <option value="jsonlint">JSON Lint</option>
+              <option value="beautifyJson">Beautify JSON</option>
               <option value="parseUri">Parse URI</option>
             </select>
             <button class="btn" id="code-submit">Execute</button>
@@ -302,7 +301,7 @@
         <div class="row">
           <div class="blurry text-right pad-right">
             <em><a href="https://github.com/sohelaman/pretty-index" target="_blank">Pretty Index</a></em>
-            <span><a href="#" id="night-mode" title="Toggle night mode">&#127767;</a></span><!-- 127769 -->
+            <span><a href="#" id="dark-mode" title="Toggle dark mode">&#127767;</a></span><!-- 127769 -->
           </div>
         </div>
       </div><!-- main -->
@@ -337,20 +336,32 @@
   class Pi {
     constructor() {
       this._prefix = '_pretty_index__';
-      this._maxHistories = 50; // maximum number of histories to keep. 
-      this._historyExcerptLength = 22; // history excerpt length before truncating.
+      this._conf = {};
+      this.configure();
       this.init();
     }
 
+    configure() {
+      let defaults = {
+        darkMode: false,
+        maxHistories: 30, // maximum number of histories to keep.
+        historyExcerptLength: 22, // history excerpt length before truncating.
+      };
+      Object.keys(defaults).forEach(v => {
+        let conf = this.confStore(v);
+        this._conf[v] = conf ? conf : defaults[v];
+      });
+    }
+
     init() {
-      if (this.getNightMode() === 'true') document.getElementsByTagName('body')[0].classList.add('night');
-      this.registerEvents();
+      if (this._conf.darkMode) document.getElementsByTagName('body')[0].classList.add('dark');
+      this.binds();
       this.listBookmarks();
       this.listTodos();
       this.listHistories();
       this.ipfy('https://api.ipify.org?format=json').then(response => {
         if (response) { document.getElementById('public-ip').innerHTML = JSON.parse(response).ip; }
-      }, error => { console.log(error); });
+      }, error => { console.log('ipfy error', error); });
       let ua = document.getElementById('user-agent');
       if (ua.innerHTML === 'N/A') ua.innerHTML = navigator.userAgent;
     } // end of init()
@@ -462,6 +473,13 @@
       }
     }
 
+    confStore(key, val) {
+      if (typeof val === 'undefined' || val === null) {
+        let config = this.getItem('conf', key);
+        return config ? config.body : null;
+      } else this.addItem('conf', {id: key, body: val});
+    }
+
     addItem(type, data) {
       if (!localStorage) { alert('Your browser does not seem to support localStorage!'); return; }
       if (typeof data.id === 'undefined' || data.id === null) {
@@ -480,7 +498,6 @@
     } // end of addItem()
 
     deleteItem(type, index) {
-      console.log('hi', index);
       let key = this._prefix + type + '-' + index;
       localStorage.removeItem(key);
     } // end of deleteItem()
@@ -623,9 +640,10 @@
           break;
         }
       } // endfor
-      if (histories.length >= this._maxHistories && !removedOne) this.deleteItem('history', histories[histories.length - 1].id);
-      let excerpt = code.substring(0, this._historyExcerptLength);
-      if (code.length > this._historyExcerptLength) excerpt += '...';
+      if (histories.length >= this._conf.maxHistories && !removedOne)
+        this.deleteItem('history', histories[histories.length - 1].id);
+      let excerpt = code.substring(0, this._conf.historyExcerptLength);
+      if (code.length > this._conf.historyExcerptLength) excerpt += '...';
       let op = document.getElementById('operation').value;
       let hist = {id: null, hash: hash, op: op, excerpt: excerpt, body: btoa(code)};
       this.addItem('history', hist);
@@ -689,19 +707,6 @@
       }
     } // end of loadHistory()
 
-    getNightMode() {
-      let key = this._prefix + 'config-nightmode';
-      let val = localStorage.getItem(key);
-      return val ? val : 'false';
-    } // end of getNightMode()
-
-    toggleNightMode() {
-      let key = this._prefix + 'config-nightmode';
-      let val = this.getNightMode();
-      val = val === 'true' ? 'false' : 'true';
-      localStorage.setItem(key, val);
-    } // end of toggleNightMode()
-
     int32Hash(str) {
       // source: https://stackoverflow.com/questions/7616461
       var hash = 0, i, chr;
@@ -714,7 +719,7 @@
       return hash;
     } // end of int32Hash()
 
-    registerEvents() {
+    binds() {
       document.getElementById('phpinfo').addEventListener('click', e => {
         e.preventDefault();
         this.phpinfo();
@@ -781,26 +786,25 @@
         e.preventDefault();
         document.getElementById('infobox-more').classList.toggle('hidden');
       });
-      document.getElementById('night-mode').addEventListener('click', e => {
+      document.getElementById('dark-mode').addEventListener('click', e => {
         e.preventDefault();
         let body = document.getElementsByTagName('body')[0];
-        body.classList.toggle('night');
-        this.toggleNightMode();
+        body.classList.toggle('dark');
+        this._conf.darkMode = !this._conf.darkMode;
+        this.confStore('darkMode', this._conf.darkMode);
       });
-    } // end of registerEvents()
+    } // end of binds()
 
   } // end of class Pi
-
-  // let's have a pie
-  let pi = new Pi();
 </script>
+
+<script type="text/javascript">let pi = new Pi();</script>
 
 </html>
 
 <?php
 
 class Pi {
-
   function __construct() {
     $this->_handleRequests();
   }
@@ -834,7 +838,7 @@ class Pi {
         case 'parseUri':
           print $this->parseURI($code);
           break;
-        case 'jsonlint':
+        case 'beautifyJson':
           $data = json_decode(trim($code));
           $jout = json_last_error() === JSON_ERROR_NONE ? json_encode($data, JSON_PRETTY_PRINT) : '<em class="warn">[Invalid format]</em>';
           print $jout;
