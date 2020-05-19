@@ -134,7 +134,8 @@
     /*.sidepane { padding-left: 0; }*/
     .bold, .delete-todo { font-weight: bold; }
     .underlined { text-decoration: underline; }
-    .content h3, .content h1 { margin: 14px; }
+    .content h1 { margin: 12px; }
+    .content h3 { margin: 8px; }
     .infobox { padding: 2px 10px; }
     a#dark-mode { color: inherit; padding-left: 4px; }
     .dark { color: lightgray; background-color: black; }
@@ -155,7 +156,7 @@
   <div class="content center">
     <div class="row">
 
-      <div class="main col-9 col-s-12">
+      <div class="main col-9 col-s-12" id="main">
         <div class="row" id="host-wrapper">
           <div class="callout">
             <a href="javascript:location.reload();"><h1><?php echo $pi->getDetails('host') . ' | ' . getHostByName(gethostname()); ?></h1></a>
@@ -183,7 +184,7 @@
                 <div>INI : <b><?php echo php_ini_loaded_file(); ?></b></div>
                 <div>Timezone : <b><?php echo date_default_timezone_get(); ?></b></div>
               </div>
-              <div class="row"><a href="#" id="more-info" title="More info">&#128899;</a></div>
+              <div class="row"><a href="#" id="more-info" title="More info">&#9660;</a></div>
             </div>
           </div>
         </div>
@@ -203,15 +204,15 @@
         <div class="row" id="search-wrapper">
           <div class="callout">
             <div class="pad">
-              <input type="text" id="search-query" maxlength="255" placeholder="Search" />
-              <button class="btn search-button" data-uri="https://www.google.com/search?q=">Google</button>
-            </div>
-            <div class="pad">
-              <button class="btn search-button" data-uri="https://duckduckgo.com/?q=">DuckDuckGo</button>
-              <button class="btn search-button" data-uri="https://stackoverflow.com/search?q=">StackOverFlow</button>
-              <button class="btn search-button" data-uri="https://github.com/search?q=">Github</button>
-              <button class="btn search-button" data-uri="https://packagist.org/search/?q=">Packagist</button>
-              <button class="btn search-button" data-uri="https://www.npmjs.com/search?q=">NPM</button>
+              <input type="text" id="search-query" maxlength="255" width="40" placeholder="Search" />
+              <select name="search-site" id="search-site">
+                <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+                <option value="https://github.com/search?q=">Github</option>
+                <option value="https://www.npmjs.com/search?q=">NPM</option>
+                <option value="https://packagist.org/search/?q=">Packagist</option>
+                <option value="https://stackoverflow.com/search?q=">StackOverFlow</option>
+              </select>
+              <button class="btn" id="search-button">Search</button>
             </div>
           </div>
         </div>
@@ -270,7 +271,7 @@
 
         <div class="row">
           <div class="callout text-left">
-            <textarea class="code-box" id="code-box" name="code-box" rows="10" placeholder="Code..." autofocus></textarea><br>
+            <textarea class="code-box" id="code-box" name="code-box" rows="15" placeholder="Code..." autofocus></textarea><br>
             <select name="operation" id="operation">
               <option value="eval">PHP</option>
               <option value="md5">MD5</option>
@@ -306,21 +307,25 @@
         </div>
       </div><!-- main -->
 
-      <div class="sidepane col-3 col-s-12 text-left">
-        <div class="callout">
-          <div class="pad">
-            <div><strong>Todos</strong></div>
-            <div class="spacer"></div>
-            <textarea id="todo-box" placeholder="What to do?" title="Hit Ctrl+Return to save"></textarea>
-            <div id="todo-list"></div>
+      <div class="sidepane col-3 col-s-12 text-left" id="sidepan">
+        <div id="todos-wrapper">
+          <div class="callout">
+            <div class="pad">
+              <div><strong>Todos</strong></div>
+              <div class="spacer"></div>
+              <textarea id="todo-box" placeholder="What to do?" title="Hit Ctrl+Return to save"></textarea>
+              <div id="todo-list"></div>
+            </div>
           </div>
+          <div class="spacer"></div>
         </div>
-        <div class="spacer"></div>
-        <div class="callout">
-          <div class="pad">
-            <div><strong>History &nbsp;<a href="#" id="clear-histories" title="Clear all histories">&times;</a></strong></div>
-            <div class="spacer"></div>
-            <div id="history-list"></div>
+        <div id="histories-wrapper">
+          <div class="callout">
+            <div class="pad">
+              <div><strong>History &nbsp;<a href="#" id="clear-histories" title="Clear all histories">&times;</a></strong></div>
+              <div class="spacer"></div>
+              <div id="history-list"></div>
+            </div>
           </div>
         </div>
       </div><!-- sidepane -->
@@ -355,6 +360,7 @@
 
     init() {
       if (this._conf.darkMode) document.getElementsByTagName('body')[0].classList.add('dark');
+      this.blackMagic();
       this.binds();
       this.listBookmarks();
       this.listTodos();
@@ -365,6 +371,16 @@
       let ua = document.getElementById('user-agent');
       if (ua.innerHTML === 'N/A') ua.innerHTML = navigator.userAgent;
     } // end of init()
+
+    blackMagic() {
+      if (this.confStore('codeBoxRows')) document.getElementById('code-box').setAttribute('rows', this.confStore('codeBoxRows')); // pi.confStore('codeBoxRows', 20)
+      let map = { hideSearch: 'search-wrapper', hideBookmarks: 'bookmark-wrapper', hideTodos: 'todos-wrapper', hideHistories: 'histories-wrapper', hideHost: 'host-wrapper', hideTime: 'time-wrapper', hideInfobox: 'infobox-wrapper', hideDir: 'current-dir-wrapper' };
+      Object.keys(map).forEach(v => { if (this.confStore(v)) document.getElementById(map[v]).classList.add('hidden'); }); // pi.confStore('hideSearch', true)
+      if (this.confStore('hideSidepan')) {
+        document.getElementById('sidepan').classList.add('hidden'); // pi.confStore('hideSidepan', true)
+        document.getElementById('main').classList.remove('col-9');
+      }
+    } // end of blackMagic()
 
     ipfy(url) {
       return new Promise(function(resolve, reject) {
@@ -725,14 +741,11 @@
         this.phpinfo();
       });
       document.getElementById('search-query').addEventListener('keyup', e => {
-        if (e.keyCode === 13) window.open('https://www.google.com/search?q=' + e.target.value, '_blank').focus();
+        if (e.keyCode === 13) window.open(document.getElementById('search-site').value + e.target.value, '_blank').focus();
       });
-      // search buttons click
-      document.querySelectorAll('.search-button').forEach((v) => {
-        v.addEventListener('click', e => {
-          let uri = e.target.getAttribute('data-uri'), query = document.getElementById('search-query').value;
-          window.open(uri + query, '_blank').focus();
-        });
+      document.getElementById('search-button').addEventListener('click', e => {
+        let uri = document.getElementById('search-site').value, query = document.getElementById('search-query').value;
+        window.open(uri + query, '_blank').focus();
       });
       document.getElementById('current-dir').addEventListener('click', e => {
         e.preventDefault();
