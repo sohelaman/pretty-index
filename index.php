@@ -46,6 +46,23 @@
       display: inline-block;
       cursor: pointer;
     }
+    body {
+      animation: fadein 1s;
+      -moz-animation: fadein 1s; /* Firefox */
+      -webkit-animation: fadein 1s; /* Safari and Chrome */
+    }
+    @keyframes fadein {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @-moz-keyframes fadein { /* Firefox */
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @-webkit-keyframes fadein { /* Safari and Chrome */
+      from { opacity:0; }
+      to { opacity:1; }
+    }
     input[type=text], textarea {
       border: 1px solid darkslategray;
       padding: 4px;
