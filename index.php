@@ -753,6 +753,7 @@
     } // end of int32Hash()
 
     binds() {
+      window.onbeforeunload = () => 'Changes you made may not be saved.';
       document.getElementById('phpinfo').addEventListener('click', e => {
         e.preventDefault();
         this.phpinfo();
