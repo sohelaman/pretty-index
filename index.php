@@ -211,6 +211,19 @@
             <?php $disk = $pi->getDetails('disk'); if ($disk): ?><div class="pad"><b>Root Filesystem:</b> <em><?php print $disk; ?></em></div><?php endif; ?>
             <?php $who = $pi->getDetails('who'); if ($who): ?><div class="pad"><b>User:</b> <em><?php print $who; ?></em></div><?php endif; ?>
             <div class="pad"><b>Hostname:</b> <em><?php print getHostName(); ?></em></div>
+            <div class="pad">
+              <b>Memory Limit:</b> <em><?php print ini_get('memory_limit'); ?></em>
+              <b>Max Execution Time:</b> <em><?php print ini_get('max_execution_time'); ?>s</em>
+            </div>
+            <div class="pad">
+              <b>Post Max Size:</b> <em><?php print ini_get('post_max_size'); ?></em>
+              <b>Upload Max Size:</b> <em><?php print ini_get('upload_max_filesize'); ?></em>
+            </div>
+            <div class="pad">
+              <b>GC Lifetime:</b> <em><?php print ini_get('session.gc_maxlifetime'); ?>s</em>
+              <b>Prob:</b> <em><?php print ini_get('session.gc_probability'); ?></em>
+              <b>Div:</b> <em><?php print ini_get('session.gc_divisor'); ?></em>
+            </div>
             <div class="pad"><b>Server Software:</b> <em><?php print $pi->getDetails('sw'); ?></em></div>
             <?php $sys = $pi->getDetails('sys'); if ($disk): ?><div class="pad"><b>System:</b> <em><?php print $sys; ?></em></div><?php endif; ?>
             <div class="pad"><b>UA:</b> <em id="user-agent"><?php print $pi->getDetails('ua'); ?></em></div>
