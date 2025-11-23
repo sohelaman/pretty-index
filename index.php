@@ -916,10 +916,10 @@ class Pi {
       } // endforeach
     } else if ($this->getOS() === 'LINUX') {
       $methods = array();
-      $ifs = explode(PHP_EOL, `ls -1 /sys/class/net`);
+      $ifs = explode(PHP_EOL, shell_exec("ls -1 /sys/class/net"));
       $interfaces = array_diff($ifs ? $ifs : [], ['', 'lo', 'docker0', 'virbr0']);
-      $methods[] = function() { return `hostname -i | awk '{print $1}'`; };
-      $methods[] = function() { return `hostname -I | awk '{print $1}'`; };
+      $methods[] = function() { return shell_exec("hostname -i | awk '{print $1}'"); };
+      $methods[] = function() { return shell_exec("hostname -I | awk '{print $1}'"); };
       foreach ($interfaces as $interface) {
         $methods[] = function() use($interface) { return exec("ip a $interface | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1'"); };
         $methods[] = function() use($interface) { return exec("ifconfig $interface | sed -En 's/127.0.0.1//;s/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p'"); };
